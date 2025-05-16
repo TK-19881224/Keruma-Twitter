@@ -36,7 +36,7 @@ function Login({ onLogin }) {
       const userRef = doc(db, "users", user.uid);
       await setDoc(userRef, {
         uid: user.uid,
-        displayName: user.email,
+        name: user.email,
         photoURL: "",
         followers: [],
         following: [],
@@ -64,7 +64,7 @@ function Login({ onLogin }) {
       if (!userSnap.exists()) {
         await setDoc(userRef, {
           uid: user.uid,
-          displayName: user.displayName || "",
+          name: user.displayName || "",
           photoURL: user.photoURL || "",
           followers: [],
           following: [],

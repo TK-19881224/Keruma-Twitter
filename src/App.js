@@ -7,7 +7,7 @@ import { storage } from './FireBase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import { db } from './FireBase'; // Firestoreのインポート
-import { collection, getDocs, addDoc} from 'firebase/firestore'; // Firestoreの関数
+import { collection, getDocs, addDoc, doc, getDoc } from 'firebase/firestore'; // Firestoreの関数
 import './index.css';
 
 function App() {
@@ -17,7 +17,8 @@ function App() {
   const [video, setVideo] = useState(null);
   const navigate = useNavigate();
   const { posts, setPosts } = useContext(PostContext);
-
+  const [profileName, setProfileName] = useState('');
+  const [profilePhotoURL, setProfilePhotoURL] = useState('');
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -25,8 +26,19 @@ function App() {
 
       if (currentUser) {
         console.log('ログインユーザーのUID:', currentUser.uid);
-      } else {
-        console.log('ユーザーがログインしていません');
+
+        (async () => {
+          try {
+            const profileDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            if (profileDoc.exists()) {
+              const data = profileDoc.data();
+              setProfileName(data.name || currentUser.displayName || '匿名');
+              setProfilePhotoURL(data.photoURL || currentUser.photoURL || '');
+            }
+          } catch (err) {
+            console.warn("プロフィール情報の取得に失敗しました", err);
+          }
+        })();
       }
     });
     return () => unsub();
@@ -38,10 +50,30 @@ function App() {
       try {
         const postsCollection = collection(db, 'posts');
         const snapshot = await getDocs(postsCollection);
-        const postsData = snapshot.docs.map((doc) => ({
-          id: doc.id, // ドキュメントID（UID）を取得
-          ...doc.data(), // 他の投稿データを含める
+        const postsData = await Promise.all(snapshot.docs.map(async (docSnap) => {
+          const postData = docSnap.data();
+
+          // Firestoreからユーザープロフィールを取得
+          const userDoc = await getDoc(doc(db, 'users', postData.uid));
+
+          let nameFromUserCollection = postData.displayName;// 投稿保存時の名前を初期値として使用
+          let profilePhotoURL = postData.photoURL || ''; // 初期値として投稿保存時のアイコン
+
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            nameFromUserCollection = userData.name || nameFromUserCollection;
+            profilePhotoURL = userData.photoURL || profilePhotoURL;
+          }
+
+          return {
+            id: docSnap.id,
+            ...postData,
+            displayName: nameFromUserCollection,
+            photoURL: profilePhotoURL || postData.photoURL || ''
+          };
         }));
+
         setPosts(postsData);
       } catch (err) {
         console.error("Error getting posts:", err);
@@ -81,14 +113,29 @@ function App() {
       videoUrl = await getDownloadURL(snapshot.ref);
     }
 
+    let profileName = '匿名';
+    let profilephoto = '';
+    if (user) {
+      try {
+        const profileDoc = await getDoc(doc(db, 'users', user.uid));
+        if (profileDoc.exists()) {
+          const data = profileDoc.data();
+          profileName = data.name || user.displayName || '匿名';
+          profilephoto = data.photoURL || user.photoURL || '';
+        }
+      } catch (err) {
+        console.warn("プロフィール情報の取得に失敗しました", err);
+      }
+    }
+
     const newPost = {
       uid: user?.uid,
       text,
       time: formattedTime,
       likes: 0,
       user: user?.email,
-      displayName: user?.displayName || '匿名',
-      photoURL: user?.photoURL || '',
+      displayName: profileName,
+      photoURL: profilephoto || user?.photoURL || '',
       imageUrl,
       videoUrl,
       comments: [],
@@ -132,13 +179,12 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-100 p-8 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans">
       <h1 className="font-audiowide text-3xl">Tomomitsu Keruma SNS</h1>
       <p>
-
         ようこそ、
         {user.photoURL ? (
-          <img src={user.photoURL} alt="アイコン" className='w-8 h-8 rounded-full inline-block mr-2' />
+          <img src={profilePhotoURL} alt="アイコン" className='w-8 h-8 rounded-full inline-block mr-2' />
         ) : (
           <img src="/default-icon.png" alt="アイコン" className='w-8 h-8 rounded-full inline-block mr-2' />
         )}
@@ -146,11 +192,20 @@ function App() {
           onClick={() => navigate(`/profile/${user.uid}`)}
           style={{ color: 'blue', cursor: 'pointer', textDecoration: 'underline' }}
         >
-          {user.email}
+          {profileName}
         </span>さん
         <button
-          onClick={() => signOut(auth)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md ml-4"
+          onClick={() => {
+            signOut(auth)
+              .then(() => {
+                console.log("ログアウトしました");
+                setUser(null); // 状態をリセット
+              })
+              .catch((error) => {
+                console.error("ログアウトに失敗しました:", error);
+              });
+          }}
+          className="ml-4 mt-4 bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
         >
           ログアウト
         </button>
@@ -201,7 +256,8 @@ function App() {
                 onClick={() => post.uid && navigate(`/profile/${post.uid}`)} // UID（ドキュメントID）を使ってプロフィールページへ
               >
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt="アイコン" className='w-8 h-8 rounded-full inline-block mr-2' />
+                  <img
+                    src={post.photoURL || "/default-icon.png"} alt="アイコン" className='w-8 h-8 rounded-full inline-block mr-2' />
                 ) : (
                   <img src="/default-icon.png" alt="アイコン" className='w-8 h-8 rounded-full inline-block mr-2' />
                 )}

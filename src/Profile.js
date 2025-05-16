@@ -154,7 +154,7 @@ function Profile() {
 
 
   return (
-    <div className="min-h-screen bg-blue-100 p-8 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans">
       <button
         onClick={() => navigate('/')}
         style={{

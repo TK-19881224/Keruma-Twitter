@@ -64,6 +64,8 @@ function EditProfile() {
         setPhotoURL(updatedPhotoURL);
       }
 
+
+
       await setDoc(
         doc(db, 'users', userId),
         { name, mail, bio, photoURL: updatedPhotoURL },
@@ -82,7 +84,7 @@ function EditProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-100 p-8 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans">
       <h2 className="text-xl font-bold mb-4">プロフィール編集</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input

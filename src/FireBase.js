@@ -1,12 +1,17 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import {
   getFirestore,
   getDocs,
-  collection
+  getDoc,
+  setDoc,
+  doc,
+  collection,
+  connectFirestoreEmulator
 } from "firebase/firestore";
 import { setLogLevel } from "firebase/app";
+
 
 setLogLevel("debug");
 
@@ -28,6 +33,13 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
+// ✅ Emulator 接続（ローカルでのみ）
+if (window.location.hostname === "localhost") {
+  console.log("🔥 Connecting to Firebase emulators...");
+  connectFirestoreEmulator(db, "localhost", 8080);
+  connectStorageEmulator(storage, "localhost", 9199);
+}
+
 // Firestoreからユーザーデータを取得
 async function fetchData() {
   try {
@@ -40,13 +52,22 @@ async function fetchData() {
   }
 }
 
-// 認証状態が変わった後に Firestore にアクセス
-onAuthStateChanged(auth, (user) => {
+// ログイン後
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    console.log("ログイン済みユーザー:", user.uid);
-    fetchData();
-  } else {
-    console.log("ユーザーがログインしていません。");
+    console.log("ログイン済み:", user.uid);
+
+    // データが存在しなければ初期データを追加
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        name: user.displayName || "名無し",
+        bio: "よろしくお願いします！",
+        photoURL: user.photoURL || "/default-icon.png"
+      });
+      console.log("✅ Firestore に初期プロフィール追加");
+    }
   }
 });
 
