@@ -8,10 +8,15 @@ import {
 } from 'firebase/auth';
 import { db } from './FireBase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 function Login({ onLogin }) {
+  if (typeof onLogin !== 'function') {
+    throw new Error('LoginコンポーネントにonLoginプロップとして関数を渡してください。');
+  }
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const loginEmail = async () => {
     try {
@@ -21,7 +26,8 @@ function Login({ onLogin }) {
       // ログイン成功後にlocalStorageにユーザーIDを保存
       localStorage.setItem('currentUserId', user.uid);
 
-      onLogin();
+      onLogin(user); // ← userを渡すことでAppRouter側のuser状態も更新
+      navigate('/'); // ← ホームへ遷移
     } catch (e) {
       alert(e.message);
     }

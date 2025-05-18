@@ -8,6 +8,7 @@ import {
   getDownloadURL
 } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
+import Header from './Header';
 
 function EditProfile() {
   const userId = localStorage.getItem('currentUserId');
@@ -20,6 +21,7 @@ function EditProfile() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    window.scrollTo(0, 0); 
     const fetchProfile = async () => {
       if (!userId) return;
       try {
@@ -84,52 +86,56 @@ function EditProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans">
-      <h2 className="text-xl font-bold mb-4">プロフィール編集</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          placeholder="名前"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-        />
-        <input
-          type="text"
-          placeholder="メールアドレス"
-          value={mail}
-          onChange={(e) => setMail(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-        />
-        <textarea
-          placeholder="自己紹介"
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-        />
-        <div>
-          <label className="block mb-1">プロフィール画像</label>
-          {photoURL && (
-            <img src={photoURL} alt="プロフィール画像" className="w-24 h-24 rounded-full mb-2" />
-          )}
-          <input type="file" accept="image/*" onChange={handleImageChange} />
+    <>
+      <div className="bg-white min-h-screen">
+        <Header profileName={name} profilePhotoURL={photoURL} />
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-10 mt-16">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="名前"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border px-3 py-2 rounded"
+            />
+            <input
+              type="text"
+              placeholder="メールアドレス"
+              value={mail}
+              onChange={(e) => setMail(e.target.value)}
+              className="w-full border px-3 py-2 rounded"
+            />
+            <textarea
+              placeholder="自己紹介"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="w-full border px-3 py-2 rounded"
+            />
+            <div>
+              <label className="block mb-1">プロフィール画像</label>
+              {photoURL && (
+                <img src={photoURL} alt="プロフィール画像" className="w-24 h-24 rounded-full mb-2" />
+              )}
+              <input type="file" accept="image/*" onChange={handleImageChange} />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              保存
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(`/profile/${userId}`)}
+              className="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            >
+              プロフィールに戻る
+            </button>
+            {status && <p className="text-sm mt-2 ml-4">{status}</p>}
+          </form>
         </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          保存
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate(`/profile/${userId}`)}
-          className="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-        >
-          プロフィールに戻る
-        </button>
-        {status && <p className="text-sm mt-2 ml-4">{status}</p>}
-      </form>
-    </div>
+      </div>
+    </>
   );
 }
 

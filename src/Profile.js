@@ -5,6 +5,7 @@ import { db } from './FireBase';
 import { useEffect, useState, useContext } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import FollowButton from './FollowButton';
+import Header from './Header';
 
 
 // ギフトリスト
@@ -128,6 +129,7 @@ function Profile() {
   const [profile, setProfile] = useState({ name: '', bio: '', photoURL: '' });
 
   useEffect(() => {
+    window.scrollTo(0, 0); 
     const fetchUserProfile = async () => {
       try {
         const isOnline = window.navigator.onLine;
@@ -154,80 +156,69 @@ function Profile() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans">
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          marginBottom: '1rem',
-          backgroundColor: '#007bff',
-          color: 'white',
-          border: 'none',
-          padding: '0.5rem 1rem',
-          borderRadius: '8px',
-          cursor: 'pointer'
-        }}
-      >
-        投稿画面に戻る
-      </button>
-
-      <div className="p-4">
-        <h2 className="text-xl font-bold mb-4">プロフィール</h2>
-        {isCurrentUser && (
-          <button
-            onClick={() => navigate('/edit-profile')}
-            className="bg-green-500 text-white px-4 py-2 rounded-2xl hover:bg-green-600 transition duration-200 shadow-md mb-4"
-          >
-            ✏️ プロフィールを編集
-          </button>
-        )}
-        {profile ? (
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <img
-              src={profile.photoURL || '/default-icon.png'}
-              alt="アイコン"
-              className='w-8 h-8 rounded-full inline-block mr-2'
-            />
-            <p><strong>名前：</strong>{profile.name}</p>
-            <p><strong>自己紹介：</strong>{profile.bio}</p>
+    <>
+      <div className="bg-white min-h-screen-h-screen">
+        <Header profileName={profile.name} profilePhotoURL={profile.photoURL} />
+        <div className=" max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-10 mt-16">
+          <div className="p-4">
+            {isCurrentUser && (
+              <button
+                onClick={() => navigate('/edit-profile')}
+                className="bg-green-500 text-white px-4 py-2 rounded-2xl hover:bg-green-600 transition duration-200 shadow-md mb-4"
+              >
+                ✏️ プロフィールを編集
+              </button>
+            )}
+            {profile ? (
+              <div className="bg-white p-4 rounded-lg shadow-md">
+                <img
+                  src={profile.photoURL || '/default-icon.png'}
+                  alt="アイコン"
+                  className='w-8 h-8 rounded-full inline-block mr-2'
+                />
+                <p><strong>名前：</strong>{profile.name}</p>
+                <p><strong>自己紹介：</strong>{profile.bio}</p>
+              </div>
+            ) : (
+              <p>読み込み中...</p>
+            )}
           </div>
-        ) : (
-          <p>読み込み中...</p>
-        )}
+
+          {/* currentUserId と userId が異なる場合にフォローボタンを表示 */}
+          {currentUserId && currentUserId !== uid && (
+            <FollowButton currentUserId={currentUserId} targetUserId={uid} />
+          )}
+
+          <div>
+            <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>投稿一覧</h3>
+            {userPosts.length === 0 ? (
+              <p>このユーザーの投稿はここに表示されます。</p>
+            ) : (
+              userPosts.map((post, index) => (
+                <div key={index} style={{ marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#666' }}>{post.time}</div>
+                  <p>{post.text}</p>
+                  {post.imageUrl && (
+                    <video controls style={{ maxWidth: '100%' }}>
+                      <source src={post.videoUrl} type="video/mp4" />
+                    </video>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {uid ? (
+            <>
+              <GiftForm toUser={uid} />
+              <GiftList userId={uid} />
+            </>
+          ) : (
+            <p>ユーザー情報を読み込み中です...</p>
+          )}
+        </div>
       </div>
-
-      {/* currentUserId と userId が異なる場合にフォローボタンを表示 */}
-      {currentUserId && currentUserId !== uid && (
-        <FollowButton currentUserId={currentUserId} targetUserId={uid} />
-      )}
-
-      <div>
-        <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>投稿一覧</h3>
-        {userPosts.length === 0 ? (
-          <p>このユーザーの投稿はここに表示されます。</p>
-        ) : (
-          userPosts.map((post, index) => (
-            <div key={index} style={{ marginBottom: '1.5rem' }}>
-              <div style={{ fontSize: '0.8rem', color: '#666' }}>{post.time}</div>
-              <p>{post.text}</p>
-              {post.imageUrl && (
-                <video controls style={{ maxWidth: '100%' }}>
-                  <source src={post.videoUrl} type="video/mp4" />
-                </video>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-
-      {uid ? (
-        <>
-          <GiftForm toUser={uid} />
-          <GiftList userId={uid} />
-        </>
-      ) : (
-        <p>ユーザー情報を読み込み中です...</p>
-      )}
-    </div>
+    </>
   );
 }
 
