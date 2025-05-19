@@ -81,6 +81,8 @@ function Login({ onLogin }) {
       // Googleログイン後にlocalStorageにユーザーIDを保存
       localStorage.setItem('currentUserId', user.uid);
 
+      onLogin(user);  // userを渡すと他関数と統一できて良いです
+      navigate('/');  // ここで投稿画面（ホーム）に遷移させる
       onLogin();
     } catch (e) {
       alert(e.message);
