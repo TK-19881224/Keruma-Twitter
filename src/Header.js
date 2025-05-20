@@ -54,44 +54,49 @@ function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 z-50 w-full bg-white shadow-md px-6 py-3">
-      <div className="max-w-4xl mx-auto flex items-center justify-between h-10">
-        {/* ロゴ */}
-        <div className="flex items-center space-x-4 cursor-pointer" onClick={() => navigate('/')}>
-          <img
-            src="/Tomomitsu_keruma_SNS_logo.png"
-            alt="SNS Logo"
-            className="h-14 w-auto"
-          />
-          <h1 className="text-xl font-bold text-gray-700">Tomomitsu SNS</h1>
-        </div>
-
-        {/* プロフィール情報 */}
-        <div className="flex items-center space-x-4">
-          <img
-            src={profilePhotoURL}
-            alt="アイコン"
-            className="w-10 h-10 rounded-full border"
-          />
-          <span
-            className="text-blue-600 font-semibold cursor-pointer hover:underline"
-            onClick={() => navigate(`/profile/${currentUserId}`)}
-          >
-            {profileName}さん
-          </span>
-
-          {/* ログインしているときだけ表示 */}
-          {user && (
-            <button
-              onClick={handleLogout}
-              className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
-            >
-              ログアウト
-            </button>
-          )}
-        </div>
+    <header className="fixed top-0 left-0 z-50 w-full bg-white shadow-md px-4 py-2">
+    <div className="max-w-screen-lg mx-auto flex flex-wrap items-center justify-between gap-y-2">
+      {/* ロゴ */}
+      <div
+        className="flex items-center space-x-2 cursor-pointer"
+        onClick={() => navigate('/')}
+      >
+        <img
+          src="/Tomomitsu_keruma_SNS_logo.png"
+          alt="SNS Logo"
+          className="h-10 w-auto"
+        />
+        <h1 className="text-lg sm:text-xl font-bold text-gray-700 whitespace-nowrap">
+          Tomomitsu SNS
+        </h1>
       </div>
-    </header>
+  
+      {/* プロフィール・操作 */}
+      <div className="flex items-center gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
+        <img
+          src={profilePhotoURL}
+          alt="アイコン"
+          className="w-9 h-9 rounded-full border"
+        />
+        <span
+          className="text-blue-600 font-medium text-sm sm:text-base cursor-pointer hover:underline"
+          onClick={() => navigate(`/profile/${currentUserId}`)}
+        >
+          {profileName}さん
+        </span>
+  
+        {/* ログアウトボタン */}
+        {user && (
+          <button
+            onClick={handleLogout}
+            className="bg-blue-500 text-white text-sm px-3 py-1.5 rounded-xl hover:bg-blue-600 transition shadow"
+          >
+            ログアウト
+          </button>
+        )}
+      </div>
+    </div>
+  </header>
   );
 }
 
