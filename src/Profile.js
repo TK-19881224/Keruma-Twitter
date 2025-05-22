@@ -129,7 +129,7 @@ function Profile() {
   const [profile, setProfile] = useState({ name: '', bio: '', photoURL: '' });
 
   useEffect(() => {
-    window.scrollTo(0, 0); 
+    window.scrollTo(0, 0);
     const fetchUserProfile = async () => {
       try {
         const isOnline = window.navigator.onLine;
@@ -199,7 +199,15 @@ function Profile() {
                   <div style={{ fontSize: '0.8rem', color: '#666' }}>{post.time}</div>
                   <p>{post.text}</p>
                   {post.imageUrl && (
-                    <video controls style={{ maxWidth: '100%' }}>
+                    <img
+                      src={post.imageUrl}
+                      alt="投稿画像"
+                      style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '0.5rem' }}
+                    />
+                  )}
+
+                  {post.videoUrl && (
+                    <video controls style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '0.5rem' }}>
                       <source src={post.videoUrl} type="video/mp4" />
                     </video>
                   )}
