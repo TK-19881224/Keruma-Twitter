@@ -1,12 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { PostContext } from './PostContext';
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from './FireBase';
 import { useEffect, useState, useContext } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
 import FollowButton from './FollowButton';
 import Header from './Header';
-
 
 // ギフトリスト
 function GiftList({ userId }) {
@@ -22,12 +20,12 @@ function GiftList({ userId }) {
   }, [userId]);
 
   return (
-    <div >
-      <h4>🎁 受け取ったギフト</h4>
-      <ul>
+    <div className="mt-6">
+      <h4 className="text-lg font-semibold mb-2">🎁 受け取ったギフト</h4>
+      <ul className="text-sm space-y-1">
         {gifts.map((gift, i) => (
           <li key={i}>
-            {gift.fromUser} さんから{gift.amount} コイン「{gift.message}」
+            {gift.fromUser} さんから {gift.amount} コイン「{gift.message}」
           </li>
         ))}
       </ul>
@@ -63,16 +61,16 @@ function GiftForm({ toUser }) {
   };
 
   return (
-    <div>
-      <h4>🎁 ギフトを送る</h4>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="mt-6">
+      <h4 className="text-lg font-semibold mb-2">🎁 ギフトを送る</h4>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input
           type="text"
           placeholder="あなたの名前"
           value={fromUser}
           onChange={(e) => setFromUser(e.target.value)}
           required
-          className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+          className="w-full border rounded px-3 py-2 text-sm"
         />
         <input
           type="number"
@@ -80,7 +78,7 @@ function GiftForm({ toUser }) {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           required
-          className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+          className="w-full border rounded px-3 py-2 text-sm"
         />
         <input
           type="text"
@@ -88,44 +86,27 @@ function GiftForm({ toUser }) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
-          className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+          className="w-full border rounded px-3 py-2 text-sm"
         />
         <button
           type="submit"
-          style={{
-            backgroundColor: '#28a745',
-            color: 'white',
-            padding: '0.5rem 1rem',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer'
-          }}
+          className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 text-sm"
         >
           ギフト送信
         </button>
-        {status && <p>{status}</p>}
+        {status && <p className="text-sm mt-1">{status}</p>}
       </form>
     </div>
   );
 }
 
 function Profile() {
-  const { uid } = useParams(); // ← ここで uid を取得
+  const { uid } = useParams();
   const navigate = useNavigate();
   const { posts } = useContext(PostContext);
-  const currentUserId = localStorage.getItem('currentUserId'); // 現在のユーザーIDを取得
+  const currentUserId = localStorage.getItem('currentUserId');
   const isCurrentUser = String(currentUserId) === String(uid);
-
-  // ログ
-  console.log('currentUserId:', currentUserId);
-  console.log('userId:', uid);
-  console.log('typeof currentUserId:', typeof currentUserId);
-  console.log('typeof userId:', typeof uid);
-  console.log('一致してる？', currentUserId === uid);
-
-
   const userPosts = posts.filter((post) => post.uid === uid);
-
   const [profile, setProfile] = useState({ name: '', bio: '', photoURL: '' });
 
   useEffect(() => {
@@ -138,13 +119,10 @@ function Profile() {
 
         if (userSnap.exists()) {
           setProfile(userSnap.data());
-          console.log('取得したプロフィール:', userSnap.data());  // ここを追加して取得したデータを確認
         } else {
-          console.log("ユーザーが見つかりません");
           setProfile({ name: '未設定', bio: 'プロフィールが設定されていません' });
         }
       } catch (err) {
-        console.warn("プロフィール取得エラー:", err);
         setProfile({ name: '未設定', bio: 'オフライン中です' });
       }
     };
@@ -154,60 +132,58 @@ function Profile() {
     }
   }, [uid]);
 
-
   return (
     <>
-      <div className="bg-white min-h-screen-h-screen">
+      <div className="bg-white min-h-screen">
         <Header profileName={profile.name} profilePhotoURL={profile.photoURL} />
-        <div className=" max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-10 mt-16">
-          <div className="p-4">
-            {isCurrentUser && (
-              <button
-                onClick={() => navigate('/edit-profile')}
-                className="bg-green-500 text-white px-4 py-2 rounded-2xl hover:bg-green-600 transition duration-200 shadow-md mb-4"
-              >
-                ✏️ プロフィールを編集
-              </button>
-            )}
-            {profile ? (
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <img
-                  src={profile.photoURL || '/default-icon.png'}
-                  alt="アイコン"
-                  className='w-8 h-8 rounded-full inline-block mr-2'
-                />
-                <p><strong>名前：</strong>{profile.name}</p>
-                <p><strong>自己紹介：</strong>{profile.bio}</p>
+        <div className="max-w-md mx-auto px-4 py-6">
+          {isCurrentUser && (
+            <button
+              onClick={() => navigate('/edit-profile')}
+              className="bg-green-500 text-white px-4 py-2 rounded-2xl hover:bg-green-600 mb-4 w-full text-sm"
+            >
+              ✏️ プロフィールを編集
+            </button>
+          )}
+
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+            <div className="flex items-center space-x-3">
+              <img
+                src={profile.photoURL || '/default-icon.png'}
+                alt="アイコン"
+                className="w-12 h-12 rounded-full"
+              />
+              <div>
+                <p className="font-semibold text-base">{profile.name}</p>
+                <p className="text-sm text-gray-600">{profile.bio}</p>
               </div>
-            ) : (
-              <p>読み込み中...</p>
-            )}
+            </div>
           </div>
 
-          {/* currentUserId と userId が異なる場合にフォローボタンを表示 */}
-          {currentUserId && currentUserId !== uid && (
+          {!isCurrentUser && currentUserId && (
             <FollowButton currentUserId={currentUserId} targetUserId={uid} />
           )}
 
           <div>
-            <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>投稿一覧</h3>
+            <h3 className="text-lg font-semibold border-b pb-2 mb-3">📝 投稿一覧</h3>
             {userPosts.length === 0 ? (
-              <p>このユーザーの投稿はここに表示されます。</p>
+              <p className="text-sm text-gray-500">このユーザーの投稿はここに表示されます。</p>
             ) : (
               userPosts.map((post, index) => (
-                <div key={index} style={{ marginBottom: '1.5rem' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#666' }}>{post.time}</div>
-                  <p>{post.text}</p>
+                <div key={index} className="mb-6">
+                  <div className="text-xs text-gray-500">{post.time}</div>
+                  <p className="text-sm">{post.text}</p>
+
                   {post.imageUrl && (
                     <img
                       src={post.imageUrl}
                       alt="投稿画像"
-                      style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '0.5rem' }}
+                      className="w-full rounded-lg mt-2"
                     />
                   )}
 
                   {post.videoUrl && (
-                    <video controls style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '0.5rem' }}>
+                    <video controls className="w-full rounded-lg mt-2">
                       <source src={post.videoUrl} type="video/mp4" />
                     </video>
                   )}
@@ -216,14 +192,8 @@ function Profile() {
             )}
           </div>
 
-          {uid ? (
-            <>
-              <GiftForm toUser={uid} />
-              <GiftList userId={uid} />
-            </>
-          ) : (
-            <p>ユーザー情報を読み込み中です...</p>
-          )}
+          <GiftForm toUser={uid} />
+          <GiftList userId={uid} />
         </div>
       </div>
     </>
