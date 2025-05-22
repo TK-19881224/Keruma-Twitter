@@ -4,7 +4,7 @@ import { auth, db } from './FireBase';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc } from "firebase/firestore";
 import useAuth from "./useAuth";
-import { Menu, X } from "lucide-react"; // ハンバーガー用アイコン
+import { Menu, X } from "lucide-react";
 
 function Header() {
   const navigate = useNavigate();
@@ -13,7 +13,12 @@ function Header() {
 
   const [profileName, setProfileName] = useState('ゲスト');
   const [profilePhotoURL, setProfilePhotoURL] = useState("/default-icon.png");
-  const [menuOpen, setMenuOpen] = useState(false); // メニュー開閉用
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // ✅ toggleMenu 関数を明示的に定義
+  const toggleMenu = () => {
+    setMenuOpen(prev => !prev);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -58,7 +63,7 @@ function Header() {
 
         {/* ハンバーガーアイコン（モバイル） */}
         <div className="md:hidden">
-          <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-600">
+          <button onClick={toggleMenu} className="text-gray-600">
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
@@ -91,7 +96,7 @@ function Header() {
             <span
               className="text-blue-600 text-sm font-medium cursor-pointer hover:underline"
               onClick={() => {
-                setMenuOpen(false);
+                toggleMenu();
                 navigate(`/profile/${currentUserId}`);
               }}
             >
@@ -101,7 +106,7 @@ function Header() {
           {user && (
             <button
               onClick={() => {
-                setMenuOpen(false);
+                toggleMenu();
                 handleLogout();
               }}
               className="w-full bg-blue-500 text-white text-sm px-3 py-2 rounded-xl hover:bg-blue-600 transition shadow"
