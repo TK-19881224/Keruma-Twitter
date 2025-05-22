@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // useRef を追加
 import { db } from './FireBase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import {
@@ -20,8 +20,12 @@ function EditProfile() {
   const [status, setStatus] = useState('');
   const navigate = useNavigate();
 
+  // ✅ 追加: 各入力欄のref
+  const nameRef = useRef(null);
+  const mailRef = useRef(null);
+
   useEffect(() => {
-    window.scrollTo(0, 0); 
+    window.scrollTo(0, 0);
     const fetchProfile = async () => {
       if (!userId) return;
       try {
@@ -34,6 +38,10 @@ function EditProfile() {
           setBio(data.bio || '');
           setPhotoURL(data.photoURL || '');
         }
+        // ✅ 初回ロード時、名前欄にフォーカス
+        setTimeout(() => {
+          nameRef.current?.focus();
+        }, 100);
       } catch (err) {
         console.error('プロフィール取得エラー:', err);
         setStatus('❌ プロフィールの取得に失敗しました。');
@@ -55,6 +63,19 @@ function EditProfile() {
       setStatus('❌ ユーザーIDが無効です。');
       return;
     }
+
+    // ✅ 入力チェックとフォーカス制御
+    if (name.trim() === '') {
+      setStatus('❌ 名前を入力してください。');
+      nameRef.current?.focus();
+      return;
+    }
+    if (mail.trim() === '') {
+      setStatus('❌ メールアドレスを入力してください。');
+      mailRef.current?.focus();
+      return;
+    }
+
     try {
       let updatedPhotoURL = photoURL;
 
@@ -65,8 +86,6 @@ function EditProfile() {
         updatedPhotoURL = await getDownloadURL(imageRef);
         setPhotoURL(updatedPhotoURL);
       }
-
-
 
       await setDoc(
         doc(db, 'users', userId),
@@ -82,56 +101,64 @@ function EditProfile() {
   };
 
   if (!userId) {
-    return <p className="text-red-500">ユーザーがログインしていません。</p>;
+    return <p className="text-red-500 px-4 mt-8">ユーザーがログインしていません。</p>;
   }
 
   return (
     <>
       <div className="bg-white min-h-screen">
         <Header profileName={name} profilePhotoURL={photoURL} />
-        <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-10 mt-16">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="max-w-2xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white px-4 py-10 font-sans mt-16 rounded-lg shadow-md">
+          <form onSubmit={handleSubmit} className="space-y-5 text-sm">
             <input
               type="text"
               placeholder="名前"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
+              ref={nameRef} // ✅ ref追加
+              className="w-full border px-3 py-2 rounded focus:outline-none focus:ring focus:border-blue-400"
             />
             <input
               type="text"
               placeholder="メールアドレス"
               value={mail}
               onChange={(e) => setMail(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
+              ref={mailRef} // ✅ ref追加
+              className="w-full border px-3 py-2 rounded focus:outline-none focus:ring focus:border-blue-400"
             />
             <textarea
               placeholder="自己紹介"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
+              rows={4}
+              className="w-full border px-3 py-2 rounded focus:outline-none focus:ring focus:border-blue-400"
             />
             <div>
-              <label className="block mb-1">プロフィール画像</label>
+              <label className="block mb-1 text-gray-700 font-medium">プロフィール画像</label>
               {photoURL && (
-                <img src={photoURL} alt="プロフィール画像" className="w-24 h-24 rounded-full mb-2" />
+                <img src={photoURL} alt="プロフィール画像" className="w-20 h-20 rounded-full mb-2 border" />
               )}
-              <input type="file" accept="image/*" onChange={handleImageChange} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="text-sm"
+              />
             </div>
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
             >
               保存
             </button>
             <button
               type="button"
               onClick={() => navigate(`/profile/${userId}`)}
-              className="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              className="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
             >
               プロフィールに戻る
             </button>
-            {status && <p className="text-sm mt-2 ml-4">{status}</p>}
+            {status && <p className="text-sm text-center mt-2">{status}</p>}
           </form>
         </div>
       </div>

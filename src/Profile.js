@@ -124,7 +124,7 @@ function Profile() {
   console.log('一致してる？', currentUserId === uid);
 
 
-  const userPosts = posts.filter((post) => post.user === uid);
+  const userPosts = posts.filter((post) => post.uid === uid);
 
   const [profile, setProfile] = useState({ name: '', bio: '', photoURL: '' });
 
