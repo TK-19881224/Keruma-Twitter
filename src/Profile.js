@@ -61,41 +61,43 @@ function GiftForm({ toUser }) {
   };
 
   return (
-    <div className="mt-6">
-      <h4 className="font-semibold mb-2">🎁 ギフトを送る</h4>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-        <input
-          type="text"
-          placeholder="あなたの名前"
-          value={fromUser}
-          onChange={(e) => setFromUser(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="number"
-          placeholder="金額(コイン)"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          placeholder="メッセージ"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <button
-          type="submit"
-          className="bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
-        >
-          ギフト送信
-        </button>
-        {status && <p className="text-sm">{status}</p>}
-      </form>
+    <div className="bg-white min-h-screen">
+      <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-10">
+        <h4 className="font-semibold mb-2">🎁 ギフトを送る</h4>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+          <input
+            type="text"
+            placeholder="あなたの名前"
+            value={fromUser}
+            onChange={(e) => setFromUser(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+          <input
+            type="number"
+            placeholder="金額(コイン)"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+          <input
+            type="text"
+            placeholder="メッセージ"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+          <button
+            type="submit"
+            className="bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
+          >
+            ギフト送信
+          </button>
+          {status && <p className="text-sm">{status}</p>}
+        </form>
+      </div>
     </div>
   );
 }
