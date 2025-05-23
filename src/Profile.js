@@ -1,103 +1,220 @@
+
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PostContext } from './PostContext';
 import { collection, query, where, getDocs, addDoc, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from './FireBase';
-import { useEffect, useState, useContext } from 'react';
 import FollowButton from './FollowButton';
 import Header from './Header';
 
-// ギフトリスト
+function Profile() {
+  const { uid } = useParams();
+  const navigate = useNavigate();
+  const { posts } = useContext(PostContext);
+  const currentUserId = localStorage.getItem('currentUserId');
+  const isCurrentUser = String(currentUserId) === String(uid);
+  const userPosts = posts.filter((post) => post.uid === uid);
+  const [profile, setProfile] = useState({ name: '', bio: '', photoURL: '' });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    if (!uid) return;
+
+    const fetchUserProfile = async () => {
+      try {
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          setProfile(userSnap.data());
+        } else {
+          setProfile({ name: '未設定', bio: 'プロフィールが設定されていません' });
+        }
+      } catch (err) {
+        console.error('プロフィール取得エラー:', err);
+        setProfile({ name: '未設定', bio: 'エラーが発生しました' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [uid]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        ユーザー情報を読み込み中です...
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white min-h-screen">
+      <Header profileName={profile.name} profilePhotoURL={profile.photoURL} />
+      <div className="bg-white min-h-screen">
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-20">
+          <div className="bg-white rounded-2xl shadow-md p-6 space-y-6 font-sans mt-6">
+
+            {/* 編集ボタン */}
+            {isCurrentUser && (
+              <button
+                onClick={() => navigate('/edit-profile')}
+                className="bg-green-600 text-white text-sm px-3 py-1 rounded-md hover:bg-green-700 transition-shadow shadow-sm hover:shadow-md"
+              >
+                ✏️ プロフィール編集
+              </button>
+            )}
+
+            {/* プロフィール情報 */}
+            <div className="flex items-center space-x-4">
+              <img
+                src={profile.photoURL || '/default-icon.png'}
+                alt="アイコン"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full"
+              />
+              <div>
+                <p className="font-semibold">{profile.name}</p>
+                <p className="text-gray-500 text-sm">{profile.bio}</p>
+              </div>
+            </div>
+
+            {/* フォローボタン */}
+            {!isCurrentUser && currentUserId && (
+              <FollowButton currentUserId={currentUserId} targetUserId={uid} />
+            )}
+
+            {/* 投稿一覧 */}
+            <div>
+              <h3 className="text-lg font-semibold border-b pb-1 mb-2">投稿一覧</h3>
+              {userPosts.length === 0 ? (
+                <p className="text-sm text-gray-600">このユーザーの投稿はここに表示されます。</p>
+              ) : (
+                userPosts.map((post, index) => (
+                  <div key={index} className="mb-4 bg-gray-50 p-3 rounded shadow-sm text-sm">
+                    <div className="text-gray-500 text-xs">{post.time}</div>
+                    <p className="mt-1">{post.text}</p>
+
+                    {post.imageUrl && (
+                      <img
+                        src={post.imageUrl}
+                        alt="投稿画像"
+                        className="w-full max-w-xs sm:max-w-md mt-2 rounded object-contain"
+                        style={{ maxHeight: '200px' }}
+                      />
+                    )}
+
+                    {post.videoUrl && (
+                      <video
+                        controls
+                        className="w-full max-w-xs sm:max-w-md mt-2 rounded"
+                        style={{ maxHeight: '200px' }}
+                      >
+                        <source src={post.videoUrl} type="video/mp4" />
+                      </video>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* ギフト */}
+            {uid && (
+              <>
+                <GiftForm toUser={uid} />
+                <GiftList userId={uid} />
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GiftForm({ toUser }) {
+  const [amount, setAmount] = useState('');
+  const [message, setMessage] = useState('');
+  const currentUserId = localStorage.getItem('currentUserId');
+
+  const handleGift = async () => {
+    if (!currentUserId || !amount) return;
+    try {
+      await addDoc(collection(db, 'gifts'), {
+        fromUser: currentUserId,
+        toUser,
+        amount: Number(amount),
+        message,
+        createdAt: Timestamp.now(),
+      });
+      setAmount('');
+      setMessage('');
+      alert('ギフトを送信しました');
+    } catch (error) {
+      console.error('ギフト送信エラー:', error);
+    }
+  };
+
+  return (
+    <div className="mt-6">
+      <h4 className="font-semibold mb-1">🎁 ギフトを送る</h4>
+      <input
+        type="number"
+        placeholder="金額"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        className="border p-1 mr-2 rounded w-24"
+      />
+      <input
+        type="text"
+        placeholder="メッセージ（任意）"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        className="border p-1 rounded w-64"
+      />
+      <button
+        onClick={handleGift}
+        className="ml-2 bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded"
+      >
+        送る
+      </button>
+    </div>
+  );
+}
+
 function GiftList({ userId }) {
   const [gifts, setGifts] = useState([]);
 
   useEffect(() => {
     const fetchGifts = async () => {
       const q = query(collection(db, 'gifts'), where('toUser', '==', userId));
-      const snapshot = await getDocs(q);
-      setGifts(snapshot.docs.map(doc => doc.data()));
+      const querySnapshot = await getDocs(q);
+      const giftData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setGifts(giftData);
     };
     fetchGifts();
   }, [userId]);
 
   return (
-    <div className="mt-4">
-      <h4 className="font-semibold mb-2">🎁 受け取ったギフト</h4>
-      <ul className="text-sm space-y-1">
-        {gifts.map((gift, i) => (
-          <li key={i} className="bg-white p-2 rounded shadow">
-            {gift.fromUser} さんから {gift.amount} コイン 「{gift.message}」
-          </li>
-        ))}
-      </ul>
+    <div className="mt-6">
+      <h4 className="font-semibold mb-1">🎁 受け取ったギフト</h4>
+      {gifts.length === 0 ? (
+        <p className="text-sm text-gray-500">まだギフトはありません</p>
+      ) : (
+        <ul className="space-y-2 text-sm">
+          {gifts.map((gift) => (
+            <li key={gift.id} className="border p-2 rounded shadow-sm">
+              <p>
+                <strong>送信者:</strong> {gift.fromUser} / <strong>金額:</strong> {gift.amount}
+              </p>
+              {gift.message && <p className="text-gray-600 mt-1">💬 {gift.message}</p>}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-// ギフトフォーム
-function GiftForm({ toUser }) {
-  const [fromUser, setFromUser] = useState('');
-  const [amount, setAmount] = useState('');
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await addDoc(collection(db, 'gifts'), {
-        toUser,
-        fromUser,
-        amount: parseInt(amount),
-        message,
-        createdAt: Timestamp.now(),
-      });
-      setStatus('✅ ギフトを送信しました！');
-      setFromUser('');
-      setAmount('');
-      setMessage('');
-    } catch (error) {
-      console.error('ギフト送信エラー', error);
-      setStatus('❌ 送信に失敗しました。');
-    }
-  };
-
-  return (
-    <div className="bg-white min-h-screen">
-      <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-10">
-        <h4 className="font-semibold mb-2">🎁 ギフトを送る</h4>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-          <input
-            type="text"
-            placeholder="あなたの名前"
-            value={fromUser}
-            onChange={(e) => setFromUser(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
-          <input
-            type="number"
-            placeholder="金額(コイン)"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
-          <input
-            type="text"
-            placeholder="メッセージ"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
-          <button
-            type="submit"
-            className="bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
-          >
-            ギフト送信
-          </button>
-          {status && <p className="text-sm">{status}</p>}
-        </form>
-      </div>
-    </div>
-  );
-}
+export default Profile;
