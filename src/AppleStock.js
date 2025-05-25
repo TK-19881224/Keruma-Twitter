@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, ReferenceDot
 } from 'recharts';
 
-const API_KEY = '05705a3955534e58b404448e6b0a95db';
+const API_KEY = process.env.REACT_APP_API_KEY;
 const SYMBOL = 'AAPL';
 
 function generateSignals(data) {
