@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { PostContext } from './PostContext';
 import { auth } from './FireBase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import Login from './Login';
 import { storage } from './FireBase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -9,18 +9,21 @@ import { useNavigate } from 'react-router-dom';
 import { db } from './FireBase'; // Firestoreのインポート
 import { collection, getDocs, addDoc, doc, getDoc } from 'firebase/firestore'; // Firestoreの関数
 import './index.css';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from './Header';
+import { deleteDoc } from 'firebase/firestore';
+import AppleStock from './AppleStock'; // ← 追加
 
 function App() {
   const [user, setUser] = useState(null);
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
   const [video, setVideo] = useState(null);
+  const [activeTab, setActiveTab] = useState("posts");
   const navigate = useNavigate();
   const { posts, setPosts } = useContext(PostContext);
   const [profileName, setProfileName] = useState('');
   const [profilePhotoURL, setProfilePhotoURL] = useState('');
+  const [showPostForm, setShowPostForm] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -46,44 +49,43 @@ function App() {
     return () => unsub();
   }, []);
 
- // 投稿をFirestoreから取得する
-useEffect(() => {
-  if (!user) return; // userがnullなら投稿取得しない
+  // 投稿をFirestoreから取得する
+  useEffect(() => {
 
-  const fetchPosts = async () => {
-    try {
-      const postsCollection = collection(db, 'posts');
-      const snapshot = await getDocs(postsCollection);
-      const postsData = await Promise.all(snapshot.docs.map(async (docSnap) => {
-        const postData = docSnap.data();
+    const fetchPosts = async () => {
+      try {
+        const postsCollection = collection(db, 'posts');
+        const snapshot = await getDocs(postsCollection);
+        const postsData = await Promise.all(snapshot.docs.map(async (docSnap) => {
+          const postData = docSnap.data();
 
-        const userDoc = await getDoc(doc(db, 'users', postData.uid));
+          const userDoc = await getDoc(doc(db, 'users', postData.uid));
 
-        let nameFromUserCollection = postData.displayName;
-        let profilePhotoURL = postData.photoURL || '';
+          let nameFromUserCollection = postData.displayName;
+          let profilePhotoURL = postData.photoURL || '';
 
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          nameFromUserCollection = userData.name || nameFromUserCollection;
-          profilePhotoURL = userData.photoURL || profilePhotoURL;
-        }
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            nameFromUserCollection = userData.name || nameFromUserCollection;
+            profilePhotoURL = userData.photoURL || profilePhotoURL;
+          }
 
-        return {
-          id: docSnap.id,
-          ...postData,
-          displayName: nameFromUserCollection,
-          photoURL: profilePhotoURL || postData.photoURL || ''
-        };
-      }));
+          return {
+            id: docSnap.id,
+            ...postData,
+            displayName: nameFromUserCollection,
+            photoURL: profilePhotoURL || postData.photoURL || ''
+          };
+        }));
 
-      setPosts(postsData);
-    } catch (err) {
-      console.error("Error getting posts:", err);
-    }
-  };
+        setPosts(postsData);
+      } catch (err) {
+        console.error("Error getting posts:", err);
+      }
+    };
 
-  fetchPosts();
-}, [user, setPosts]); // userが変わる度に投稿取得
+    fetchPosts();
+  }, [setPosts]); // userが変わる度に投稿取得
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -165,8 +167,16 @@ useEffect(() => {
     setPosts(updated);
   };
 
-  const handleDelete = (index) => {
-    setPosts(posts.filter((_, i) => i !== index));
+  const handleDelete = async (index) => {
+    const postToDelete = posts[index];
+    if (!postToDelete?.id) return;
+
+    try {
+      await deleteDoc(doc(db, 'posts', postToDelete.id));
+      setPosts(posts.filter((_, i) => i !== index));
+    } catch (err) {
+      console.error("削除失敗:", err);
+    }
   };
 
   const handleAddComment = (postIndex, commentText) => {
@@ -176,62 +186,23 @@ useEffect(() => {
     setPosts(updatedPosts);
   };
 
-  if (!user) {
-    const handleLogin = () => {
-      console.log("ログイン成功");
-      // ここは空でも問題ないが、関数として明示的に渡すのが重要
-    };
-  
-    return <Login onLogin={handleLogin} />;
-  }
+
+
+
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-10">
+      <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-20">
         {/* ロゴを左上に固定表示 */}
         <Header
           profilePhotoURL={profilePhotoURL}
           profileName={profileName}
           user={user}
           setUser={setUser}
+          onPostClick={() => setShowPostForm(!showPostForm)} // ← 新たに追加
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
         />
-        <main className="pt-20">
-          <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow-md space-y-4 mt-4">
-          <h2>投稿しましょう</h2>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="今なにしてる?"
-              rows="4"
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
-            />
-
-            <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                if (file.type.startsWith("image/")) {
-                  setImage(file);
-                  setVideo(null);
-                } else if (file.type.startsWith("video/")) {
-                  setVideo(file);
-                  setImage(null);
-                }
-              }}
-              className="block"
-            />
-
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
-            >
-              投稿する
-            </button>
-          </form>
-        </main>
 
         <div className="bg-white p-4 rounded-lg shadow-md mb-4 mt-6">
           <h2>投稿一覧</h2>
@@ -242,12 +213,11 @@ useEffect(() => {
                   className="flex items-center cursor-pointer text-blue-500"
                   onClick={() => post.uid && navigate(`/profile/${post.uid}`)} // UID（ドキュメントID）を使ってプロフィールページへ
                 >
-                  {user.photoURL ? (
-                    <img
-                      src={post.photoURL || "/default-icon.png"} alt="アイコン" className='w-8 h-8 rounded-full inline-block mr-2' />
-                  ) : (
-                    <img src="/default-icon.png" alt="アイコン" className='w-8 h-8 rounded-full inline-block mr-2' />
-                  )}
+                  <img
+                    src={post.photoURL || "/default-icon.png"}
+                    alt="アイコン"
+                    className='w-8 h-8 rounded-full inline-block mr-2'
+                  />
                   <p className="font-semibold text-sm">{post.displayName}</p>
                 </div>
                 <p className="text-xs text-gray-500 ml-2">{post.time} - {post.user}</p>

@@ -15,10 +15,7 @@ function Header() {
   const [profilePhotoURL, setProfilePhotoURL] = useState("/default-icon.png");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // ✅ toggleMenu 関数を明示的に定義
-  const toggleMenu = () => {
-    setMenuOpen(prev => !prev);
-  };
+  const toggleMenu = () => setMenuOpen(prev => !prev);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -61,59 +58,87 @@ function Header() {
           <h1 className="text-lg font-bold text-gray-700 whitespace-nowrap">Tomomitsu SNS</h1>
         </div>
 
-        {/* ハンバーガーアイコン（モバイル） */}
-        <div className="md:hidden">
+        {/* プロフィール + ハンバーガーアイコンを一括配置 */}
+        <div className="flex items-center space-x-4">
+          <div className="hidden sm:flex items-center space-x-3 cursor-pointer">
+            {user ? (
+              <>
+                <img src={profilePhotoURL} alt="アイコン" className="w-8 h-8 rounded-full border" />
+                <span className="text-blue-600 text-sm font-medium hover:underline" onClick={() => navigate(`/profile/${currentUserId}`)}>
+                  {profileName}さん
+                </span>
+              </>
+            ) : (
+              <>
+                <img src="/default-icon.png" alt="ゲストアイコン" className="w-8 h-8 rounded-full border" />
+                <span className="text-gray-600 text-sm font-medium">
+                  ゲストさん
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* ハンバーガーアイコン（PC・モバイル共通） */}
           <button onClick={toggleMenu} className="text-gray-600">
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
-
-        {/* メニュー（PC） */}
-        <div className="hidden md:flex items-center space-x-4">
-          <img src={profilePhotoURL} alt="アイコン" className="w-9 h-9 rounded-full border" />
-          <span
-            className="text-blue-600 font-medium text-sm cursor-pointer hover:underline"
-            onClick={() => navigate(`/profile/${currentUserId}`)}
-          >
-            {profileName}さん
-          </span>
-          {user && (
-            <button
-              onClick={handleLogout}
-              className="bg-blue-500 text-white text-sm px-3 py-1.5 rounded-xl hover:bg-blue-600 transition shadow"
-            >
-              ログアウト
-            </button>
-          )}
-        </div>
       </div>
 
-      {/* モバイル用メニュー */}
+      {/* メニュー（PC・モバイル共通） */}
       {menuOpen && (
-        <div className="md:hidden mt-2 px-2 space-y-2">
-          <div className="flex items-center space-x-3">
-            <img src={profilePhotoURL} alt="アイコン" className="w-8 h-8 rounded-full border" />
-            <span
-              className="text-blue-600 text-sm font-medium cursor-pointer hover:underline"
-              onClick={() => {
-                toggleMenu();
-                navigate(`/profile/${currentUserId}`);
-              }}
-            >
-              {profileName}さんのプロフィール
-            </span>
-          </div>
-          {user && (
+        <div className="mt-2 px-2 py-3 border-t border-gray-200">
+          <div className="flex flex-col md:flex-row md:justify-center md:space-x-6 space-y-3 md:space-y-0">
             <button
               onClick={() => {
                 toggleMenu();
-                handleLogout();
+                navigate('/post');
               }}
-              className="w-full bg-blue-500 text-white text-sm px-3 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
             >
-              ログアウト
+              ✏️ 投稿
             </button>
-          )}
+            <button
+              onClick={() => {
+                toggleMenu();
+                navigate('/');
+              }}
+              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+            >
+              投稿一覧
+            </button>
+            <button
+              onClick={() => {
+                toggleMenu();
+                navigate('/stock');
+              }}
+              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+            >
+              株価分析
+            </button>
+            {/* ✅ ログイン/ログアウト切り替え */}
+            {user ? (
+              <button
+                onClick={() => {
+                  toggleMenu();
+                  handleLogout();
+                }}
+                className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+              >
+                ログアウト
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  toggleMenu();
+                  navigate('/login');
+                }}
+                className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+              >
+                ログイン
+              </button>
+            )}
+          </div>
         </div>
       )}
     </header>

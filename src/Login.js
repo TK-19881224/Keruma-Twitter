@@ -130,6 +130,12 @@ function Login({ onLogin }) {
           >
             Googleでログイン
           </button>
+          <button
+            className="bg-blue-500 text-white px-4 py-3 rounded-full text-sm sm:text-base hover:bg-blue-600 transition duration-200 shadow-md"
+            onClick={() => navigate('/')}
+          >
+            トップページ
+          </button>
         </div>
       </div>
     </div>

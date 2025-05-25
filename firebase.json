@@ -8,10 +8,15 @@
   },
   "hosting": {
     "public": "build",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "/storage/**",
         "function": "storageFunction"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
       }
     ]
   }
