@@ -12,6 +12,7 @@ import './index.css';
 import Header from './Header';
 import { deleteDoc } from 'firebase/firestore';
 import AppleStock from './AppleStock'; // ← 追加
+import { recordPageView } from './recordPageView';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -186,7 +187,9 @@ function App() {
     setPosts(updatedPosts);
   };
 
-
+  useEffect(() => {
+    recordPageView();
+  }, []);
 
 
 

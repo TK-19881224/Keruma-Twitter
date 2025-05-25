@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from './FireBase';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import useAuth from "./useAuth";
 import { Menu, X } from "lucide-react";
 
@@ -14,8 +14,20 @@ function Header() {
   const [profileName, setProfileName] = useState('ゲスト');
   const [profilePhotoURL, setProfilePhotoURL] = useState("/default-icon.png");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
 
   const toggleMenu = () => setMenuOpen(prev => !prev);
+
+  const handleLogout = () => {
+    signOut(auth)
+      .then(() => {
+        navigate('/login');
+      })
+      .catch((error) => {
+        console.error('ログアウト失敗:', error);
+      });
+  };
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -39,15 +51,19 @@ function Header() {
     fetchProfile();
   }, [user]);
 
-  const handleLogout = () => {
-    signOut(auth)
-      .then(() => {
-        navigate('/login');
-      })
-      .catch((error) => {
-        console.error('ログアウト失敗:', error);
-      });
-  };
+  useEffect(() => {
+    const fetchViews = async () => {
+      try {
+        const collectionRef = collection(db, 'pageViews');
+        const querySnapshot = await getDocs(collectionRef);
+        setViewCount(querySnapshot.size);
+      } catch (error) {
+        console.error("ビュー数の取得に失敗しました", error);
+        setViewCount(0);
+      }
+    };
+    fetchViews();
+  }, [user]);
 
   return (
     <header className="fixed top-0 left-0 z-50 w-full bg-white shadow-md px-4 py-3">
@@ -56,9 +72,10 @@ function Header() {
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
           <img src="/Tomomitsu_keruma_SNS_logo.png" alt="SNS Logo" className="h-10 w-auto" />
           <h1 className="text-lg font-bold text-gray-700 whitespace-nowrap">Tomomitsu SNS</h1>
+          <span className="whitespace-nowrap text-xs text-gray-500">views: {viewCount}</span>
         </div>
 
-        {/* プロフィール + ハンバーガーアイコンを一括配置 */}
+        {/* プロフィール + ハンバーガーアイコン */}
         <div className="flex items-center space-x-4">
           <div className="hidden sm:flex items-center space-x-3 cursor-pointer">
             {user ? (
@@ -78,14 +95,14 @@ function Header() {
             )}
           </div>
 
-          {/* ハンバーガーアイコン（PC・モバイル共通） */}
+          {/* ハンバーガーボタン */}
           <button onClick={toggleMenu} className="text-gray-600">
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
       </div>
 
-      {/* メニュー（PC・モバイル共通） */}
+      {/* メニュー */}
       {menuOpen && (
         <div className="mt-2 px-2 py-3 border-t border-gray-200">
           <div className="flex flex-col md:flex-row md:justify-center md:space-x-6 space-y-3 md:space-y-0">
@@ -116,7 +133,6 @@ function Header() {
             >
               株価分析
             </button>
-            {/* ✅ ログイン/ログアウト切り替え */}
             {user ? (
               <button
                 onClick={() => {
