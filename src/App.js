@@ -2,23 +2,16 @@ import React, { useState, useEffect, useContext } from 'react';
 import { PostContext } from './PostContext';
 import { auth } from './FireBase';
 import { onAuthStateChanged } from 'firebase/auth';
-import Login from './Login';
-import { storage } from './FireBase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import { db } from './FireBase'; // Firestoreのインポート
-import { collection, getDocs, addDoc, doc, getDoc } from 'firebase/firestore'; // Firestoreの関数
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore'; // Firestoreの関数
 import './index.css';
 import Header from './Header';
 import { deleteDoc } from 'firebase/firestore';
-import AppleStock from './AppleStock'; // ← 追加
 import { recordPageView } from './recordPageView';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [text, setText] = useState('');
-  const [image, setImage] = useState(null);
-  const [video, setVideo] = useState(null);
   const [activeTab, setActiveTab] = useState("posts");
   const navigate = useNavigate();
   const { posts, setPosts } = useContext(PostContext);
@@ -88,79 +81,6 @@ function App() {
     fetchPosts();
   }, [setPosts]); // userが変わる度に投稿取得
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (text.trim() === '') return;
-
-    const now = new Date();
-    const formattedTime = now.toLocaleString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    let imageUrl = null;
-    if (image) {
-      const safeFileName = `${Date.now()}_${image.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const imageRef = ref(storage, `images/${safeFileName}`);
-      const snapshot = await uploadBytes(imageRef, image);
-      imageUrl = await getDownloadURL(snapshot.ref);
-    }
-
-
-    let videoUrl = null;
-    if (video) {
-      const safeVideoName = `${Date.now()}_${video.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const videoRef = ref(storage, `videos/${safeVideoName}`);
-      const snapshot = await uploadBytes(videoRef, video);
-      videoUrl = await getDownloadURL(snapshot.ref);
-    }
-
-    let profileName = '匿名';
-    let profilephoto = '';
-    if (user) {
-      try {
-        const profileDoc = await getDoc(doc(db, 'users', user.uid));
-        if (profileDoc.exists()) {
-          const data = profileDoc.data();
-          profileName = data.name || user.displayName || '匿名';
-          profilephoto = data.photoURL || user.photoURL || '';
-        }
-      } catch (err) {
-        console.warn("プロフィール情報の取得に失敗しました", err);
-      }
-    }
-
-    const newPost = {
-      uid: user?.uid,
-      text,
-      time: formattedTime,
-      likes: 0,
-      user: user?.email,
-      displayName: profileName,
-      photoURL: profilephoto || user?.photoURL || '',
-      imageUrl,
-      videoUrl,
-      comments: [],
-      draftComment: ''
-    };
-
-    try {
-      // Firestore に保存
-      const docRef = await addDoc(collection(db, 'posts'), newPost);
-      console.log('投稿がFirestoreに保存されました。ID:', docRef.id);
-
-      // UIに反映
-      setPosts([{ id: docRef.id, ...newPost }, ...posts]);
-      setText('');
-      setImage(null);
-      setVideo(null);
-    } catch (error) {
-      console.error('投稿の保存に失敗しました:', error);
-    }
-  };
 
   const handleLike = (index) => {
     const updated = [...posts];

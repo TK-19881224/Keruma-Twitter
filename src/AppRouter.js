@@ -13,7 +13,8 @@ import PostPage from './PostPage';
 
 import { auth } from './FireBase'; // Firebase初期化ファイル
 import { onAuthStateChanged } from 'firebase/auth';
-import AppleStock from './AppleStock'; //
+import NewsPage from './NewsPage'
+
 
 function AppRouter() {
   const [user, setUser] = useState(null);
@@ -49,7 +50,7 @@ function AppRouter() {
           <Route path="/post" element={<PostPage user={user} setUser={setUser} />} />
           <Route path="/profile/:uid" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/stock" element={<AppleStock />} /> {/* ← ✅ ここを追加 */}
+          <Route path="/news" element={<NewsPage />} />
         </Routes>
       </Router>
     </PostProvider>

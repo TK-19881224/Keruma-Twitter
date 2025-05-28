@@ -71,30 +71,29 @@ function Header() {
         {/* ロゴ */}
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
           <img src="/Tomomitsu_keruma_SNS_logo.png" alt="SNS Logo" className="h-10 w-auto" />
-          <h1 className="text-lg font-bold text-gray-700 whitespace-nowrap">Tomomitsu SNS</h1>
-          <span className="whitespace-nowrap text-xs text-gray-500">views: {viewCount}</span>
-        </div>
-
-        {/* プロフィール + ハンバーガーアイコン */}
-        <div className="flex items-center space-x-4">
-          <div className="hidden sm:flex items-center space-x-3 cursor-pointer">
+                    <div className="hidden sm:flex items-center space-x-3 cursor-pointer">
             {user ? (
               <>
                 <img src={profilePhotoURL} alt="アイコン" className="w-8 h-8 rounded-full border" />
                 <span className="text-blue-600 text-sm font-medium hover:underline" onClick={() => navigate(`/profile/${currentUserId}`)}>
-                  {profileName}さん
+                  {profileName}
                 </span>
               </>
             ) : (
               <>
                 <img src="/default-icon.png" alt="ゲストアイコン" className="w-8 h-8 rounded-full border" />
                 <span className="text-gray-600 text-sm font-medium">
-                  ゲストさん
+                  ゲスト
                 </span>
               </>
             )}
           </div>
+          
+        </div>
 
+        {/* ハンバーガーアイコン */}
+        <div className="flex items-center space-x-4">
+          <span className="whitespace-nowrap text-xs text-gray-500">views: {viewCount}</span>
           {/* ハンバーガーボタン */}
           <button onClick={toggleMenu} className="text-gray-600">
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
@@ -122,16 +121,13 @@ function Header() {
               }}
               className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
             >
-              投稿一覧
+              📢 投稿一覧
             </button>
             <button
-              onClick={() => {
-                toggleMenu();
-                navigate('/stock');
-              }}
-              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+            onClick={() => navigate('/news')}
+            className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
             >
-              株価分析
+              📰 ニュース
             </button>
             {user ? (
               <button
