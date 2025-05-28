@@ -71,7 +71,7 @@ function Header() {
         {/* ロゴ */}
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
           <img src="/Tomomitsu_keruma_SNS_logo.png" alt="SNS Logo" className="h-10 w-auto" />
-                    <div className="hidden sm:flex items-center space-x-3 cursor-pointer">
+                    <div className="items-center space-x-3 cursor-pointer">
             {user ? (
               <>
                 <img src={profilePhotoURL} alt="アイコン" className="w-8 h-8 rounded-full border" />
