@@ -70,7 +70,7 @@ function Header() {
       <div className="max-w-screen-lg mx-auto flex items-center justify-between">
         {/* ロゴ */}
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
-          <img src="/Tomomitsu_keruma_SNS_logo.png" alt="SNS Logo" className="h-10 w-auto" />
+          <img src={`${process.env.PUBLIC_URL}/SNS_logo.png`} alt="SNS Logo" className="h-16 w-auto" />
           <div className="flex items-center space-x-3 cursor-pointer">
             {user ? (
               <>
@@ -82,7 +82,7 @@ function Header() {
             ) : (
               <>
                 <img src="/default-icon.png" alt="ゲストアイコン" className="w-8 h-8 rounded-full border" />
-                <span className="text-gray-600 text-sm font-medium">ï
+                <span className="text-gray-600 text-sm font-medium" onClick={() => navigate(`/profile/${currentUserId}`)}>
                   ゲスト
                 </span>
               </>
@@ -113,6 +113,12 @@ function Header() {
               className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
             >
               ✏️ 投稿
+            </button>
+            <button
+              onClick={() => navigate(`/profile/${currentUserId}`)}
+              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+            >
+              👤 プロフィール
             </button>
             <button
               onClick={() => {

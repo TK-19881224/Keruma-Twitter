@@ -1,24 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { PostProvider } from './PostContext';
-import App from './App';
+import Home from './Home';
 import Profile from './Profile';
 import EditProfile from './EditProfile';
 import Login from './Login';
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes
-} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PostPage from './PostPage';
-
-import { auth } from './FireBase'; // Firebase初期化ファイル
+import { auth } from './FireBase';
 import { onAuthStateChanged } from 'firebase/auth';
-import NewsPage from './NewsPage'
-
+import NewsPage from './NewsPage';
+import Terms from './Terms';
+import Privacy from './Privacy';
+import Layout from './Layout'; // ✅ Layout をインポート
 
 function AppRouter() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // ローディング状態
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -28,7 +25,6 @@ function AppRouter() {
     return () => unsubscribe();
   }, []);
 
-  // 🔽 useEffectの後に記述する
   const handleLogin = (userData) => {
     setUser(userData);
   };
@@ -37,20 +33,23 @@ function AppRouter() {
     return <div>読み込み中...</div>;
   }
 
-
   return (
     <PostProvider>
       <Router>
         <Routes>
-          {/* ルートのAppにはuserやsetUserを渡しておくのがおすすめ */}
-          <Route path="/" element={<App user={user} setUser={setUser} />} />
+          {/* ✅ Layoutを親ルートにして、共通レイアウトを提供 */}
+          <Route path="/" element={<Layout user={user} setUser={setUser} />}>
+            <Route index element={<Home user={user} setUser={setUser} />} />
+            <Route path="post" element={<PostPage user={user} setUser={setUser} />} />
+            <Route path="profile/:uid" element={<Profile />} />
+            <Route path="edit-profile" element={<EditProfile />} />
+            <Route path="news" element={<NewsPage />} />
+            <Route path="terms" element={<Terms />} />
+            <Route path="privacy" element={<Privacy />} />
+          </Route>
 
-          {/* LoginにonLogin関数を渡す */}
+          {/* ✅ Loginはレイアウトに含めない（ログイン前なので） */}
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/post" element={<PostPage user={user} setUser={setUser} />} />
-          <Route path="/profile/:uid" element={<Profile />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/news" element={<NewsPage />} />
         </Routes>
       </Router>
     </PostProvider>
