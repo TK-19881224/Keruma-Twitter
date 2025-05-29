@@ -94,36 +94,38 @@ function Profile() {
               {userPosts.length === 0 ? (
                 <p className="text-sm text-gray-600">このユーザーの投稿はここに表示されます。</p>
               ) : (
-                userPosts.map((post, index) => (
-                  <div key={index} className="mb-4 bg-gray-50 p-3 rounded shadow-sm text-sm">
-                    <div className="text-gray-500 text-xs">{post.time}</div>
-                    <p className="mt-1">{post.text}</p>
+                userPosts.map((post, index) => {
+                  const postUrl = `${window.location.origin}/profile/${uid}`;
+                  return (
+                    <div key={index} className="mb-4 bg-gray-50 p-3 rounded shadow-sm text-sm">
+                      <div className="text-gray-500 text-xs">{post.time}</div>
+                      <p className="mt-1">{post.text}</p>
 
-                    {post.imageUrl && (
-                      <img
-                        src={post.imageUrl}
-                        alt="投稿画像"
-                        className="w-full max-w-xs sm:max-w-md mt-2 rounded object-contain"
-                        style={{ maxHeight: '200px' }}
-                      />
-                    )}
+                      {post.imageUrl && (
+                        <img
+                          src={post.imageUrl}
+                          alt="投稿画像"
+                          className="w-full max-w-xs sm:max-w-md mt-2 rounded object-contain"
+                          style={{ maxHeight: '200px' }}
+                        />
+                      )}
 
-                    {post.videoUrl && (
-                      <video
-                        controls
-                        className="w-full max-w-xs sm:max-w-md mt-2 rounded"
-                        style={{ maxHeight: '200px' }}
-                      >
-                        <source src={post.videoUrl} type="video/mp4" />
-                      </video>
-                    )}
+                      {post.videoUrl && (
+                        <video
+                          controls
+                          className="w-full max-w-xs sm:max-w-md mt-2 rounded"
+                          style={{ maxHeight: '200px' }}
+                        >
+                          <source src={post.videoUrl} type="video/mp4" />
+                        </video>
+                      )}
 
-                    {/* ✅ 投稿ごとにシェアボタンを表示 */}
-                    <div className="mt-2">
-                      <ShareButtons url={postUrl} title={`Keruma SNSの投稿：${post.text.slice(0, 20)}...`} />
+                      <div className="mt-2">
+                        <ShareButtons url={postUrl} title={`Keruma SNSの投稿：${post.text.slice(0, 20)}...`} />
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
