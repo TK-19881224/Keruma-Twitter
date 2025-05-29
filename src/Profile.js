@@ -117,12 +117,14 @@ function Profile() {
                         <source src={post.videoUrl} type="video/mp4" />
                       </video>
                     )}
+
+                    {/* ✅ 投稿ごとにシェアボタンを表示 */}
+                    <div className="mt-2">
+                      <ShareButtons url={postUrl} title={`Keruma SNSの投稿：${post.text.slice(0, 20)}...`} />
+                    </div>
                   </div>
                 ))
               )}
-              <div className="mt-6">
-                <ShareButtons url={url} title={title} />
-              </div>
             </div>
 
             {/* ギフト */}
