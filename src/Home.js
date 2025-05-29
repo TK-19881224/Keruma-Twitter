@@ -19,7 +19,7 @@ function Home() {
   const [profileName, setProfileName] = useState('');
   const [profilePhotoURL, setProfilePhotoURL] = useState('');
   const [showPostForm, setShowPostForm] = useState(false);
-  const url = window.location.href; // ✅ 現在のページURL
+  const baseUrl = window.location.href; // ✅ 現在のページURL
   const title = "Keruma SNSで面白い投稿を見つけました！"; // ✅ 任意のタイトル
 
   useEffect(() => {
@@ -196,8 +196,10 @@ function Home() {
                 >
                   コメントする
                 </button>
-                {/* SNS共有ボタン */}
-                <ShareButtons url={url} title={title} />
+                <ShareButtons
+                  url={`${baseUrl}/post/${post.id}`}  // ← ここを投稿IDごとに
+                  title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
+                />
 
                 {(index + 1) % 3 === 0 && (
                   <div className="p-4 my-4 bg-gray-100 border text-center">

@@ -3,7 +3,6 @@ import {
   FacebookShareButton,
   FacebookIcon,
   TwitterShareButton,
-  TwitterIcon,
   LineShareButton,
   LineIcon,
 } from "react-share";
