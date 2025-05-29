@@ -9,6 +9,7 @@ import './index.css';
 import Header from './Header';
 import { deleteDoc } from 'firebase/firestore';
 import { recordPageView } from './recordPageView';
+import ShareButtons from "./ShareButtons";
 
 function Home() {
   const [user, setUser] = useState(null);
@@ -18,6 +19,8 @@ function Home() {
   const [profileName, setProfileName] = useState('');
   const [profilePhotoURL, setProfilePhotoURL] = useState('');
   const [showPostForm, setShowPostForm] = useState(false);
+  const url = window.location.href; // ✅ 現在のページURL
+  const title = "Keruma SNSで面白い投稿を見つけました！"; // ✅ 任意のタイトル
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -193,6 +196,8 @@ function Home() {
                 >
                   コメントする
                 </button>
+                {/* SNS共有ボタン */}
+                <ShareButtons url={url} title={title} />
 
                 {(index + 1) % 3 === 0 && (
                   <div className="p-4 my-4 bg-gray-100 border text-center">

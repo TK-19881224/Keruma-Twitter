@@ -6,6 +6,7 @@ import { collection, query, where, getDocs, addDoc, Timestamp, doc, getDoc } fro
 import { db } from './FireBase';
 import FollowButton from './FollowButton';
 import Header from './Header';
+import ShareButtons from './ShareButtons';
 
 function Profile() {
   const { uid } = useParams();
@@ -16,6 +17,8 @@ function Profile() {
   const userPosts = posts.filter((post) => post.uid === uid);
   const [profile, setProfile] = useState({ name: '', bio: '', photoURL: '' });
   const [loading, setLoading] = useState(true);
+  const url = window.location.href; // ✅ 現在のページURL
+  const title = "Keruma SNSで面白い投稿を見つけました！"; // ✅ 任意のタイトル
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -117,6 +120,9 @@ function Profile() {
                   </div>
                 ))
               )}
+              <div className="mt-6">
+                <ShareButtons url={url} title={title} />
+              </div>
             </div>
 
             {/* ギフト */}

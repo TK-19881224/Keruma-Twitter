@@ -69,20 +69,20 @@ function Header() {
     <header className="fixed top-0 left-0 z-50 w-full bg-white shadow-md px-4 py-3">
       <div className="max-w-screen-lg mx-auto flex items-center justify-between">
         {/* ロゴ */}
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
-          <img src={`${process.env.PUBLIC_URL}/SNS_logo.png`} alt="SNS Logo" className="h-16 w-auto" />
-          <div className="flex items-center space-x-3 cursor-pointer">
+        <div className="flex items-center space-x-2 cursor-pointer">
+          <img src={`${process.env.PUBLIC_URL}/SNS_logo.png`} alt="SNS Logo" className="h-16 w-auto"  onClick={() => navigate('/')}/>
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate(`/profile/${currentUserId}`)}>
             {user ? (
               <>
                 <img src={profilePhotoURL} alt="アイコン" className="w-8 h-8 rounded-full border" />
-                <span className="text-blue-600 text-sm font-medium hover:underline" onClick={() => navigate(`/profile/${currentUserId}`)}>
+                <span className="text-blue-600 text-sm font-medium hover:underline" >
                   {profileName}
                 </span>
               </>
             ) : (
               <>
                 <img src="/default-icon.png" alt="ゲストアイコン" className="w-8 h-8 rounded-full border" />
-                <span className="text-gray-600 text-sm font-medium" onClick={() => navigate(`/profile/${currentUserId}`)}>
+                <span className="text-gray-600 text-sm font-medium">
                   ゲスト
                 </span>
               </>
