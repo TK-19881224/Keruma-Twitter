@@ -10,6 +10,7 @@ import {
 import { ReactComponent as XIcon } from "./x-icon.svg"; // ✅ SVGアイコン（自分で追加）
 
 const ShareButtons = ({ url, title }) => {
+    console.log("ShareButtons 受け取りURL:", url); // ← 追加
   return (
     <div className="flex gap-4 mt-4">
       <TwitterShareButton url={url} title={title}>

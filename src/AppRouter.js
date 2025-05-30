@@ -12,6 +12,7 @@ import NewsPage from './NewsPage';
 import Terms from './Terms';
 import Privacy from './Privacy';
 import Layout from './Layout'; // ✅ Layout をインポート
+import PostDetail from './PostDetail';
 
 function AppRouter() {
   const [user, setUser] = useState(null);
@@ -46,6 +47,7 @@ function AppRouter() {
             <Route path="news" element={<NewsPage />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
+            <Route path="post/:postId" element={<PostDetail />} />
           </Route>
 
           {/* ✅ Loginはレイアウトに含めない（ログイン前なので） */}

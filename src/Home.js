@@ -19,7 +19,7 @@ function Home() {
   const [profileName, setProfileName] = useState('');
   const [profilePhotoURL, setProfilePhotoURL] = useState('');
   const [showPostForm, setShowPostForm] = useState(false);
-  const baseUrl = window.location.href; // ✅ 現在のページURL
+  const baseUrl = window.location.origin;  // ✅ 現在のページURL
   const title = "Keruma SNSで面白い投稿を見つけました！"; // ✅ 任意のタイトル
 
   useEffect(() => {
@@ -148,58 +148,68 @@ function Home() {
                 </div>
                 <p className="text-xs text-gray-500 ml-2">{post.time} - {post.user}</p>
               </div>
-              <p className="mb-2">{post.text}</p>
-              {post.imageUrl && (
-                <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
-              )}
-              {post.videoUrl && (
-                <video controls className="rounded-md max-w-full mb-2">
-                  <source src={post.videoUrl} type="video/mp4" />
-                  お使いのブラウザは video タグをサポートしていません。
-                </video>
-              )}
 
-              <div className="flex space-x-4 mt-2">
-                <button onClick={() => handleLike(index)} className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md">
-                  ❤️ {post.likes}
-                </button>
-                <button onClick={() => handleDelete(index)} className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md">
-                  🗑️
-                </button>
-              </div>
+              {/* 🔽 投稿内容クリックで遷移 */}
+              <div
+                className="cursor-pointer"
+                onClick={() => navigate(`/post/${post.id}`)}
+              >
 
-              <div style={{ marginTop: '1rem' }}>
-                <h4>コメント</h4>
-                <ul>
-                  {post.comments.map((comment, cIndex) => (
-                    <li key={cIndex} style={{ fontSize: '0.9rem' }}>{comment}</li>
-                  ))}
-                </ul>
-                <textarea
-                  placeholder='コメントを追加...'
-                  rows={3}
-                  onChange={(e) => {
-                    const updated = [...posts];
-                    updated[index].draftComment = e.target.value;
-                    setPosts(updated);
-                  }}
-                  value={post.draftComment || ''}
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
-                />
-                <button
-                  onClick={() => {
-                    if ((post.draftComment || '').trim()) {
-                      handleAddComment(index, post.draftComment);
-                    }
-                  }}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
-                >
-                  コメントする
-                </button>
-                <ShareButtons
-                  url={`${baseUrl}/post/${post.id}`}  // ← ここを投稿IDごとに
-                  title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
-                />
+                <p className="mb-2">{post.text}</p>
+                {post.imageUrl && (
+                  <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
+                )}
+                {post.videoUrl && (
+                  <video controls className="rounded-md max-w-full mb-2">
+                    <source src={post.videoUrl} type="video/mp4" />
+                    お使いのブラウザは video タグをサポートしていません。
+                  </video>
+                )}
+
+
+                <div className="flex space-x-4 mt-2">
+                  <button onClick={() => handleLike(index)} className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md">
+                    ❤️ {post.likes}
+                  </button>
+                  <button onClick={() => handleDelete(index)} className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md">
+                    🗑️
+                  </button>
+                </div>
+
+
+                <div style={{ marginTop: '1rem' }}>
+                  <h4>コメント</h4>
+                  <ul>
+                    {post.comments.map((comment, cIndex) => (
+                      <li key={cIndex} style={{ fontSize: '0.9rem' }}>{comment}</li>
+                    ))}
+                  </ul>
+                  <textarea
+                    placeholder='コメントを追加...'
+                    rows={1}
+                    onChange={(e) => {
+                      const updated = [...posts];
+                      updated[index].draftComment = e.target.value;
+                      setPosts(updated);
+                    }}
+                    value={post.draftComment || ''}
+                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+                  />
+                  <button
+                    onClick={() => {
+                      if ((post.draftComment || '').trim()) {
+                        handleAddComment(index, post.draftComment);
+                      }
+                    }}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+                  >
+                    コメントする
+                  </button>
+                  <ShareButtons
+                    url={`${baseUrl}/post/${post.id}`}  // ← ここを投稿IDごとに
+                    title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
+                  />
+                </div>
 
                 {(index + 1) % 3 === 0 && (
                   <div className="p-4 my-4 bg-gray-100 border text-center">

@@ -98,32 +98,37 @@ function Profile() {
                   const postUrl = `${window.location.origin}/profile/${uid}`;
                   return (
                     <div key={index} className="mb-4 bg-gray-50 p-3 rounded shadow-sm text-sm">
-                      <div className="text-gray-500 text-xs">{post.time}</div>
-                      <p className="mt-1">{post.text}</p>
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => navigate(`/post/${post.id}`)}
+                      >
+                        <div className="text-gray-500 text-xs">{post.time}</div>
+                        <p className="mt-1">{post.text}</p>
 
-                      {post.imageUrl && (
-                        <img
-                          src={post.imageUrl}
-                          alt="投稿画像"
-                          className="w-full max-w-xs sm:max-w-md mt-2 rounded object-contain"
-                          style={{ maxHeight: '200px' }}
+                        {post.imageUrl && (
+                          <img
+                            src={post.imageUrl}
+                            alt="投稿画像"
+                            className="w-full max-w-xs sm:max-w-md mt-2 rounded object-contain"
+                            style={{ maxHeight: '200px' }}
+                          />
+                        )}
+
+                        {post.videoUrl && (
+                          <video
+                            controls
+                            className="w-full max-w-xs sm:max-w-md mt-2 rounded"
+                            style={{ maxHeight: '200px' }}
+                          >
+                            <source src={post.videoUrl} type="video/mp4" />
+                          </video>
+                        )}
+
+                        <ShareButtons
+                          url={`${baseUrl}/post/${post.id}`}  // ← ここを投稿IDごとに
+                          title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
                         />
-                      )}
-
-                      {post.videoUrl && (
-                        <video
-                          controls
-                          className="w-full max-w-xs sm:max-w-md mt-2 rounded"
-                          style={{ maxHeight: '200px' }}
-                        >
-                          <source src={post.videoUrl} type="video/mp4" />
-                        </video>
-                      )}
-
-                      <ShareButtons
-                        url={`${baseUrl}/post/${post.id}`}  // ← ここを投稿IDごとに
-                        title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
-                      />
+                      </div>
                     </div>
                   );
                 })
