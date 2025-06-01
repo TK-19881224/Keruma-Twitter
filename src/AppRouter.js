@@ -35,26 +35,26 @@ function AppRouter() {
   }
 
   return (
-    <PostProvider>
-      <Router>
+    <Router>
+      <PostProvider>
         <Routes>
-          {/* ✅ Layoutを親ルートにして、共通レイアウトを提供 */}
           <Route path="/" element={<Layout user={user} setUser={setUser} />}>
             <Route index element={<Home user={user} setUser={setUser} />} />
             <Route path="post" element={<PostPage user={user} setUser={setUser} />} />
-            <Route path="profile/:uid" element={<Profile />} />
+            <Route
+              path="/profile/:uid"
+              element={<Profile currentUserId={localStorage.getItem('currentUserId')} />}
+            />
             <Route path="edit-profile" element={<EditProfile />} />
             <Route path="news" element={<NewsPage />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="post/:postId" element={<PostDetail />} />
           </Route>
-
-          {/* ✅ Loginはレイアウトに含めない（ログイン前なので） */}
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
         </Routes>
-      </Router>
-    </PostProvider>
+      </PostProvider>
+    </Router>
   );
 }
 

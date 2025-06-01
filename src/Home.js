@@ -3,32 +3,30 @@ import { PostContext } from './PostContext';
 import { auth } from './FireBase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { db } from './FireBase'; // Firestoreのインポート
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore'; // Firestoreの関数
+import { db } from './FireBase';
+import { collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import './index.css';
 import Header from './Header';
-import { deleteDoc } from 'firebase/firestore';
 import { recordPageView } from './recordPageView';
 import ShareButtons from "./ShareButtons";
 
-function Home() {
-  const [user, setUser] = useState(null);
+function Home({ user, setUser }) {
   const [activeTab, setActiveTab] = useState("posts");
   const navigate = useNavigate();
   const { posts, setPosts } = useContext(PostContext);
   const [profileName, setProfileName] = useState('');
   const [profilePhotoURL, setProfilePhotoURL] = useState('');
   const [showPostForm, setShowPostForm] = useState(false);
-  const baseUrl = window.location.origin;  // ✅ 現在のページURL
-  const title = "Keruma SNSで面白い投稿を見つけました！"; // ✅ 任意のタイトル
+  const [loading, setLoading] = useState(true); // 🔍 ローディング管理追加
+  const baseUrl = window.location.origin;
+
+  const title = "Keruma SNSで面白い投稿を見つけました！";
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
 
       if (currentUser) {
-        console.log('ログインユーザーのUID:', currentUser.uid);
-
         (async () => {
           try {
             const profileDoc = await getDoc(doc(db, 'users', currentUser.uid));
@@ -46,17 +44,28 @@ function Home() {
     return () => unsub();
   }, []);
 
-  // 投稿をFirestoreから取得する
-  useEffect(() => {
+  // 👇 追加: デバッグ表示用
+  const [debugInfo, setDebugInfo] = useState('デバッグ情報未取得');
 
+  useEffect(() => {
     const fetchPosts = async () => {
       try {
         const postsCollection = collection(db, 'posts');
-        const snapshot = await getDocs(postsCollection);
+        const q = query(postsCollection, orderBy("time", "desc"));
+        const snapshot = await getDocs(q);
+
+        // ✅ デバッグ: 取得件数確認
+        setDebugInfo(`Firestore投稿件数: ${snapshot.size} 件`);
+
         const postsData = await Promise.all(snapshot.docs.map(async (docSnap) => {
           const postData = docSnap.data();
 
+          // Firestore TimestampからDateへ変換する安全な書き方
+          const time = postData.time && postData.time.toDate ? postData.time.toDate() : null;
+
           const userDoc = await getDoc(doc(db, 'users', postData.uid));
+          const commentsSnapshot = await getDocs(collection(db, "posts", docSnap.id, "comments"));
+          const commentCount = commentsSnapshot.size;
 
           let nameFromUserCollection = postData.displayName;
           let profilePhotoURL = postData.photoURL || '';
@@ -69,21 +78,32 @@ function Home() {
 
           return {
             id: docSnap.id,
-            ...postData,
-            displayName: nameFromUserCollection,
-            photoURL: profilePhotoURL || postData.photoURL || ''
+            uid: postData.uid,
+            text: postData.text || '',
+            likes: postData.likes ?? 0,
+            imageUrl: postData.imageUrl || '',
+            videoUrl: postData.videoUrl || '',
+            displayName: nameFromUserCollection || '匿名',
+            photoURL: profilePhotoURL || '/default-icon.png',
+            commentCount: commentCount ?? 0,
+            draftComment: '',
+            time, // ← 変換済みのDateオブジェクト
           };
         }));
 
         setPosts(postsData);
+
+        // ✅ デバッグ: postsDataを文字列で表示
+        setDebugInfo(prev => prev + `\n読み込み成功: ${postsData.length} 件の投稿を取得`);
+        setLoading(false); // ✅ 追加！
       } catch (err) {
+        setDebugInfo(`❌ 投稿取得エラー: ${err.message}`);
         console.error("Error getting posts:", err);
       }
     };
 
     fetchPosts();
-  }, [setPosts]); // userが変わる度に投稿取得
-
+  }, [setPosts]);
 
   const handleLike = (index) => {
     const updated = [...posts];
@@ -103,110 +123,105 @@ function Home() {
     }
   };
 
-  const handleAddComment = (postIndex, commentText) => {
-    const updatedPosts = [...posts];
-    updatedPosts[postIndex].comments.push(commentText);
-    updatedPosts[postIndex].draftComment = '';
-    setPosts(updatedPosts);
+  const handleAddComment = async (postIndex, commentText) => {
+    const post = posts[postIndex];
+    if (!post?.id || !user) return;
+
+    const comment = {
+      text: commentText,
+      createdAt: new Date(),
+      userId: user.uid,
+      userName: profileName,
+    };
+
+    try {
+      await addDoc(collection(db, "posts", post.id, "comments"), comment);
+      const updatedPosts = [...posts];
+      updatedPosts[postIndex].commentCount = (updatedPosts[postIndex].commentCount || 0) + 1;
+      updatedPosts[postIndex].draftComment = '';
+      setPosts(updatedPosts);
+    } catch (err) {
+      console.error("コメントの保存に失敗:", err);
+    }
   };
 
   useEffect(() => {
     recordPageView();
   }, []);
 
-
-
   return (
     <div className="bg-white min-h-screen">
       <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-20">
-        {/* ロゴを左上に固定表示 */}
         <Header
           profilePhotoURL={profilePhotoURL}
           profileName={profileName}
           user={user}
           setUser={setUser}
-          onPostClick={() => setShowPostForm(!showPostForm)} // ← 新たに追加
+          onPostClick={() => setShowPostForm(!showPostForm)}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
         />
 
         <div className="bg-white p-4 rounded-lg shadow-md mb-4 mt-6">
           <h2>投稿一覧</h2>
-          {posts.map((post, index) => (
-            <div key={index} style={{ padding: '1rem', borderBottom: '1px solid #ccc' }}>
-              <div className="flex items-center mb-2">
-                <div
-                  className="flex items-center cursor-pointer text-blue-500"
-                  onClick={() => post.uid && navigate(`/profile/${post.uid}`)} // UID（ドキュメントID）を使ってプロフィールページへ
-                >
-                  <img
-                    src={post.photoURL || "/default-icon.png"}
-                    alt="アイコン"
-                    className='w-8 h-8 rounded-full inline-block mr-2'
-                  />
-                  <p className="font-semibold text-sm">{post.displayName}</p>
-                </div>
-                <p className="text-xs text-gray-500 ml-2">{post.time} - {post.user}</p>
-              </div>
+          <h3 className="font-bold">デバッグログ</h3>
+          <pre className="text-sm whitespace-pre-wrap">{debugInfo}</pre>
+          {loading ? (
+            <p>読み込み中...</p> // ✅/❌ ローディング表示
+          ) : posts.length === 0 ? (
+            <p>投稿がありません</p>
 
-              {/* 🔽 投稿内容クリックで遷移 */}
-              <div
-                className="cursor-pointer"
-                onClick={() => navigate(`/post/${post.id}`)}
-              >
-
-                <p className="mb-2">{post.text}</p>
-                {post.imageUrl && (
-                  <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
-                )}
-                {post.videoUrl && (
-                  <video controls className="rounded-md max-w-full mb-2">
-                    <source src={post.videoUrl} type="video/mp4" />
-                    お使いのブラウザは video タグをサポートしていません。
-                  </video>
-                )}
-
-
-                <div className="flex space-x-4 mt-2">
-                  <button onClick={() => handleLike(index)} className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md">
-                    ❤️ {post.likes}
-                  </button>
-                  <button onClick={() => handleDelete(index)} className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md">
-                    🗑️
-                  </button>
-                </div>
-
-
-                <div style={{ marginTop: '1rem' }}>
-                  <h4>コメント</h4>
-                  <ul>
-                    {post.comments.map((comment, cIndex) => (
-                      <li key={cIndex} style={{ fontSize: '0.9rem' }}>{comment}</li>
-                    ))}
-                  </ul>
-                  <textarea
-                    placeholder='コメントを追加...'
-                    rows={1}
-                    onChange={(e) => {
-                      const updated = [...posts];
-                      updated[index].draftComment = e.target.value;
-                      setPosts(updated);
-                    }}
-                    value={post.draftComment || ''}
-                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
-                  />
-                  <button
-                    onClick={() => {
-                      if ((post.draftComment || '').trim()) {
-                        handleAddComment(index, post.draftComment);
-                      }
-                    }}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+          ) : (
+            posts.map((post, index) => (
+              <div key={post.id} className="p-4 border-b border-gray-300 hover:bg-gray-100 transition duration-200 rounded-md">
+                <div className="flex items-center mb-2">
+                  <div
+                    className="flex items-center cursor-pointer text-blue-500"
+                    onClick={() => post.uid && navigate(`/profile/${post.uid}`)}
                   >
-                    コメントする
-                  </button>
+                    <img
+                      src={post.photoURL || "/default-icon.png"}
+                      alt="アイコン"
+                      className='w-8 h-8 rounded-full inline-block mr-2'
+                    />
+                    <p className="font-semibold text-sm">{post.displayName}</p>
+                  </div>
+                </div>
+
+                <div
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/post/${post.id}`)}
+                >
+                  <p className="mb-2">{post.text}</p>
+                  {post.imageUrl && (
+                    <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
+                  )}
+                  {post.videoUrl && (
+                    <video controls className="rounded-md max-w-full mb-2">
+                      <source src={post.videoUrl} type="video/mp4" />
+                      お使いのブラウザは video タグをサポートしていません。
+                    </video>
+                  )}
+                  <p className="text-xs text-gray-500 mb-2">
+                    {post.time ? post.time.toLocaleString() : '日時不明'}
+                  </p>
+                  <div className="flex space-x-4 mt-2">
+                    <button onClick={() => handleLike(index)} className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md">
+                      ❤️ {post.likes}
+                    </button>
+                    <button onClick={() => handleDelete(index)} className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md">
+                      🗑️
+                    </button>
+                  </div>
+
+                  <div style={{ marginTop: '1rem' }}>
+                    <p className="text-sm text-gray-600">
+                      コメント数: {post.commentCount || 0}
+                    </p>
+                  </div>
+
                   <ShareButtons
-                    url={`${baseUrl}/post/${post.id}`}  // ← ここを投稿IDごとに
+                    url={`${baseUrl}/post/${post.id}`}
                     title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
                   />
                 </div>
@@ -220,8 +235,8 @@ function Home() {
                   </div>
                 )}
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

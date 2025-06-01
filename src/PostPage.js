@@ -5,6 +5,7 @@ import { db, storage } from './FireBase';
 import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
+import { serverTimestamp } from "firebase/firestore";
 
 function PostPage({ profilePhotoURL, profileName, user, setUser }) {
   const [text, setText] = useState('');
@@ -67,7 +68,7 @@ function PostPage({ profilePhotoURL, profileName, user, setUser }) {
     const newPost = {
       uid: user.uid,  // ← 必ず存在する状態で代入
       text,
-      time: formattedTime,
+      time: serverTimestamp(), // ← 追加（投稿日時）
       likes: 0,
       user: user.email,
       displayName: resolvedName,
