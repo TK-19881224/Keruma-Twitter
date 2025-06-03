@@ -105,23 +105,12 @@ function Home({ user, setUser }) {
     fetchPosts();
   }, [setPosts]);
 
-  const handleLike = async () => {
-    // いいね処理（例：投稿のlikes配列にuidを追加など）
-
-    // 通知を送る
-    await sendLikeNotification({
-      toUserId: postOwnerId,
-      fromUserId: currentUserId,
-      postId: currentPostId,
-    });
-  };
-
+const handleLike = async (index) => {
   const updated = [...posts];
   updated[index].likes += 1;
   setPosts(updated);
 
   const likedPost = posts[index];
-
 
   try {
     await updateDoc(doc(db, 'posts', likedPost.id), {
@@ -143,6 +132,7 @@ function Home({ user, setUser }) {
     console.error("いいね処理または通知作成でエラー:", err);
   }
 };
+
 
 const handleDelete = async (index) => {
   const postToDelete = posts[index];
