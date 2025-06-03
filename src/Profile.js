@@ -53,7 +53,13 @@ function Profile({ currentUserId }) {
             ...data,
             time: data.time && data.time.toDate ? data.time.toDate() : null,  // ← Timestamp → Dateに変換
           };
+        }).sort((a, b) => {
+          // null を最下位にする日付ソート
+          if (!a.time) return 1;
+          if (!b.time) return -1;
+          return b.time - a.time;
         });
+        
         setUserPosts(postsData);
       } catch (error) {
         console.error("投稿取得エラー:", error);
@@ -106,9 +112,9 @@ function Profile({ currentUserId }) {
               <p className="text-sm text-gray-600">このユーザーの投稿はここに表示されます。</p>
             ) : (
               userPosts.map((post, index) => (
-                <div key={index} className="mb-4 bg-gray-50 p-3 rounded shadow-sm text-sm">
+                <div key={index} className="mb-4 bg-white p-3 rounded shadow-sm text-sm">
                   <div
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:bg-gray-100 p-2 rounded transition"
                     onClick={() => navigate(`/post/${post.id}`)}
                   >
                     <div className="text-gray-500 text-xs">

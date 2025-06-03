@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from './FireBase';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where, orderBy, onSnapshot, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import useAuth from "./useAuth";
 import { Menu, X } from "lucide-react";
+import { Bell } from "lucide-react";
 
 function Header() {
   const navigate = useNavigate();
@@ -15,6 +16,9 @@ function Header() {
   const [profilePhotoURL, setProfilePhotoURL] = useState("/default-icon.png");
   const [menuOpen, setMenuOpen] = useState(false);
   const [viewCount, setViewCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [notifOpen, setNotifOpen] = useState(false);
+
 
   const toggleMenu = () => setMenuOpen(prev => !prev);
 
@@ -28,6 +32,21 @@ function Header() {
       });
   };
 
+  const sendLikeNotification = async ({ toUserId, fromUserId, postId }) => {
+    try {
+      await addDoc(collection(db, "notifications"), {
+        toUserId,       // いいねを受けるユーザーID
+        fromUserId,     // いいねしたユーザーID
+        postId,         // 関連投稿ID
+        type: "like",   // 通知タイプ
+        message: "あなたの投稿にいいねが付きました！",
+        read: false,
+        createdAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("通知の追加に失敗しました", error);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -65,12 +84,31 @@ function Header() {
     fetchViews();
   }, [user]);
 
+  const markAsRead = async (notifId) => {
+    const notifRef = doc(db, "notifications", notifId);
+    await updateDoc(notifRef, { read: true });
+  };
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    const q = query(
+      collection(db, "notifications"),
+      where("toUserId", "==", currentUserId),
+      orderBy("createdAt", "desc")
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setNotifications(notifs);
+    });
+    return () => unsubscribe();
+  }, [currentUserId]);
+
   return (
     <header className="fixed top-0 left-0 z-50 w-full bg-white shadow-md px-4 py-3">
       <div className="max-w-screen-lg mx-auto flex items-center justify-between">
         {/* ロゴ */}
         <div className="flex items-center space-x-2 cursor-pointer">
-          <img src={`${process.env.PUBLIC_URL}/SNS_logo.png`} alt="SNS Logo" className="h-16 w-auto"  onClick={() => navigate('/')}/>
+          <img src={`${process.env.PUBLIC_URL}/SNS_logo.png`} alt="SNS Logo" className="h-16 w-auto" onClick={() => navigate('/')} />
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate(`/profile/${currentUserId}`)}>
             {user ? (
               <>
@@ -88,9 +126,42 @@ function Header() {
               </>
             )}
           </div>
+          {/* 通知ベル */}
+          <div className="relative">
+            <button onClick={() => setNotifOpen(prev => !prev)} className="text-gray-600">
+              <Bell size={24} />
+              {notifications.some(n => !n.read) && (
+                <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-2 h-2"></span>
+              )}
+            </button>
 
+            {notifOpen && (
+              <div className="absolute right-0 mt-2 w-72 max-h-80 overflow-y-auto bg-white border shadow-lg rounded-lg z-50">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500">通知はありません</div>
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      onClick={() => {
+                        markAsRead(notif.id);
+                        if (notif.type === "post") {
+                          navigate(`/post/${notif.postId}`);
+                        } else if (notif.type === "profile") {
+                          navigate(`/profile/${notif.fromUserId}`);
+                        }
+                        setNotifOpen(false);
+                      }}
+                      className={`p-3 border-b hover:bg-gray-50 text-sm cursor-pointer ${notif.read ? "text-gray-500" : "text-black"}`}
+                    >
+                      {notif.message}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </div>
-
         {/* ハンバーガーアイコン */}
         <div className="flex items-center space-x-4">
           <span className="whitespace-nowrap text-xs text-gray-500">views: {viewCount}</span>
@@ -100,6 +171,7 @@ function Header() {
           </button>
         </div>
       </div>
+
 
       {/* メニュー */}
       {menuOpen && (
