@@ -9,6 +9,9 @@ import './index.css';
 import Header from './Header';
 import { recordPageView } from './recordPageView';
 import ShareButtons from "./ShareButtons";
+import { Helmet } from 'react-helmet';
+
+
 
 function Home({ user, setUser }) {
   const [activeTab, setActiveTab] = useState("posts");
@@ -105,174 +108,198 @@ function Home({ user, setUser }) {
     fetchPosts();
   }, [setPosts]);
 
-const handleLike = async (index) => {
-  const updated = [...posts];
-  updated[index].likes += 1;
-  setPosts(updated);
+  const handleLike = async (index) => {
+    const updated = [...posts];
+    updated[index].likes += 1;
+    setPosts(updated);
 
-  const likedPost = posts[index];
+    const likedPost = posts[index];
 
-  try {
-    await updateDoc(doc(db, 'posts', likedPost.id), {
-      likes: updated[index].likes
-    });
-
-    if (likedPost.uid !== user.uid) {
-      await addDoc(collection(db, "notifications"), {
-        toUserId: likedPost.uid,
-        fromUserId: user.uid,
-        type: "like",
-        postId: likedPost.id,
-        message: `${profileName}さんがあなたの投稿にいいねしました ❤️`,
-        read: false,
-        createdAt: serverTimestamp()
+    try {
+      await updateDoc(doc(db, 'posts', likedPost.id), {
+        likes: updated[index].likes
       });
+
+      if (likedPost.uid !== user.uid) {
+        await addDoc(collection(db, "notifications"), {
+          toUserId: likedPost.uid,
+          fromUserId: user.uid,
+          type: "like",
+          postId: likedPost.id,
+          message: `${profileName}さんがあなたの投稿にいいねしました ❤️`,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (err) {
+      console.error("いいね処理または通知作成でエラー:", err);
     }
-  } catch (err) {
-    console.error("いいね処理または通知作成でエラー:", err);
-  }
-};
-
-
-const handleDelete = async (index) => {
-  const postToDelete = posts[index];
-  if (!postToDelete?.id) return;
-
-  try {
-    await deleteDoc(doc(db, 'posts', postToDelete.id));
-    setPosts(posts.filter((_, i) => i !== index));
-  } catch (err) {
-    console.error("削除失敗:", err);
-  }
-};
-
-const handleAddComment = async (postIndex, commentText) => {
-  const post = posts[postIndex];
-  if (!post?.id || !user) return;
-
-  const comment = {
-    text: commentText,
-    createdAt: new Date(),
-    userId: user.uid,
-    userName: profileName,
   };
 
-  try {
-    await addDoc(collection(db, "posts", post.id, "comments"), comment);
-    const updatedPosts = [...posts];
-    updatedPosts[postIndex].commentCount = (updatedPosts[postIndex].commentCount || 0) + 1;
-    updatedPosts[postIndex].draftComment = '';
-    setPosts(updatedPosts);
-  } catch (err) {
-    console.error("コメントの保存に失敗:", err);
-  }
-};
 
-useEffect(() => {
-  recordPageView();
-}, []);
+  const handleDelete = async (index) => {
+    const postToDelete = posts[index];
+    if (!postToDelete?.id) return;
 
-return (
-  <div className="bg-white min-h-screen">
-    <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-20">
-      <Header
-        profilePhotoURL={profilePhotoURL}
-        profileName={profileName}
-        user={user}
-        setUser={setUser}
-        onPostClick={() => setShowPostForm(!showPostForm)}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+    try {
+      await deleteDoc(doc(db, 'posts', postToDelete.id));
+      setPosts(posts.filter((_, i) => i !== index));
+    } catch (err) {
+      console.error("削除失敗:", err);
+    }
+  };
 
-      <div className="bg-white p-4 rounded-lg shadow-md mb-4 mt-6">
-        <h2>投稿一覧</h2>
-        {loading ? (
-          <p>読み込み中...</p>
-        ) : posts.length === 0 ? (
-          <p>投稿がありません</p>
-        ) : (
-          posts.map((post, index) => (
-            <div key={post.id} className="p-4 border-b border-gray-300 hover:bg-gray-100 transition duration-200 rounded-md">
-              <div className="flex items-center mb-2">
-                <div
-                  className="flex items-center cursor-pointer text-blue-500"
-                  onClick={() => post.uid && navigate(`/profile/${post.uid}`)}
-                >
-                  <img
-                    src={post.photoURL || "/default-icon.png"}
-                    alt="アイコン"
-                    className='w-8 h-8 rounded-full inline-block mr-2'
-                  />
-                  <p className="font-semibold text-sm">{post.displayName}</p>
-                </div>
-              </div>
+  const handleAddComment = async (postIndex, commentText) => {
+    const post = posts[postIndex];
+    if (!post?.id || !user) return;
 
-              <div
-                className="cursor-pointer"
-                onClick={() => navigate(`/post/${post.id}`)}
-              >
-                <p className="mb-2">{post.text}</p>
-                {post.imageUrl && (
-                  <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
-                )}
-                {post.videoUrl && (
-                  <video controls className="rounded-md max-w-full mb-2">
-                    <source src={post.videoUrl} type="video/mp4" />
-                    お使いのブラウザは video タグをサポートしていません。
-                  </video>
-                )}
-                <p className="text-xs text-gray-500 mb-2">
-                  {post.time ? post.time.toLocaleString() : '日時不明'}
-                </p>
-                <div className="flex space-x-4 mt-2">
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleLike(index);
-                    }}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+    const comment = {
+      text: commentText,
+      createdAt: new Date(),
+      userId: user.uid,
+      userName: profileName,
+    };
+
+    try {
+      await addDoc(collection(db, "posts", post.id, "comments"), comment);
+      const updatedPosts = [...posts];
+      updatedPosts[postIndex].commentCount = (updatedPosts[postIndex].commentCount || 0) + 1;
+      updatedPosts[postIndex].draftComment = '';
+      setPosts(updatedPosts);
+    } catch (err) {
+      console.error("コメントの保存に失敗:", err);
+    }
+  };
+
+  useEffect(() => {
+    recordPageView();
+  }, []);
+
+  return (
+    <>
+      <Helmet>
+        {/* SEO */}
+        <title>つぶやき</title>
+        <meta name="description" content="写真・動画・つぶやきを気軽に共有できるSNSです。" />
+        <link rel="canonical" href="https://keruma-twitter.vercel.app/" />
+
+        {/* Open Graph for Facebook & others */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://keruma-twitter.vercel.app/" />
+        <meta property="og:title" content="つぶやき" />
+        <meta property="og:description" content="写真・動画・つぶやきを気軽に共有できるSNSです。" />
+        <meta property="og:image" content="https://keruma-twitter.vercel.app/og-image.png" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://keruma-twitter.vercel.app/" />
+        <meta name="twitter:title" content="つぶやき" />
+        <meta name="twitter:description" content="写真・動画・つぶやきを気軽に共有できるSNSです。" />
+        <meta name="twitter:image" content="https://keruma-twitter.vercel.app/og-image.png" />
+      </Helmet>
+      <div className="bg-white min-h-screen">
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-20">
+          <Header
+            profilePhotoURL={profilePhotoURL}
+            profileName={profileName}
+            user={user}
+            setUser={setUser}
+            onPostClick={() => setShowPostForm(!showPostForm)}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+          />
+
+          <div className="bg-white p-4 rounded-lg shadow-md mb-4 mt-6">
+            <h2>投稿一覧</h2>
+            {loading ? (
+              <p>読み込み中...</p>
+            ) : posts.length === 0 ? (
+              <p>投稿がありません</p>
+            ) : (
+              posts.map((post, index) => (
+                <div key={post.id} className="p-4 border-b border-gray-300 hover:bg-gray-100 transition duration-200 rounded-md">
+                  <div className="flex items-center mb-2">
+                    <div
+                      className="flex items-center cursor-pointer text-blue-500"
+                      onClick={() => post.uid && navigate(`/profile/${post.uid}`)}
+                    >
+                      <img
+                        src={post.photoURL || "/default-icon.png"}
+                        alt="アイコン"
+                        className='w-8 h-8 rounded-full inline-block mr-2'
+                      />
+                      <p className="font-semibold text-sm">{post.displayName}</p>
+                    </div>
+                  </div>
+
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/post/${post.id}`)}
                   >
-                    ❤️ {post.likes}
-                  </button>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleDelete(index);
-                    }}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
-                  >
-                    🗑️
-                  </button>
-
-                  <div style={{ marginTop: '1rem' }}>
-                    <p className="text-sm text-gray-600">
-                      コメント数: {post.commentCount || 0}
+                    <p className="mb-2">{post.text}</p>
+                    {post.imageUrl && (
+                      <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
+                    )}
+                    {post.videoUrl && (
+                      <video controls className="rounded-md max-w-full mb-2">
+                        <source src={post.videoUrl} type="video/mp4" />
+                        お使いのブラウザは video タグをサポートしていません。
+                      </video>
+                    )}
+                    <p className="text-xs text-gray-500 mb-2">
+                      {post.time ? post.time.toLocaleString() : '日時不明'}
                     </p>
-                  </div>
+                    <div className="flex space-x-4 mt-2">
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleLike(index);
+                        }}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+                      >
+                        ❤️ {post.likes}
+                      </button>
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDelete(index);
+                        }}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+                      >
+                        🗑️
+                      </button>
 
-                  <ShareButtons
-                    url={`${baseUrl}/post/${post.id}`}
-                    title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
-                  />
+                      <div style={{ marginTop: '1rem' }}>
+                        <p className="text-sm text-gray-600">
+                          コメント数: {post.commentCount || 0}
+                        </p>
+                      </div>
+
+                      <ShareButtons
+                        url={`${baseUrl}/post/${post.id}`}
+                        title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
+                      />
+                    </div>
+
+                    {(index + 1) % 3 === 0 && (
+                      <div className="p-4 my-4 bg-gray-100 border text-center">
+                        <p className="font-bold">スポンサーリンク</p>
+                        <a href="https://qiita.com/Tomomitsu_Keruma" target="_blank" rel="noopener noreferrer">
+                          <img src="/Qiita_keruma_image.png" alt="広告" className="mx-auto max-w-full h-auto" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {(index + 1) % 3 === 0 && (
-                  <div className="p-4 my-4 bg-gray-100 border text-center">
-                    <p className="font-bold">スポンサーリンク</p>
-                    <a href="https://qiita.com/Tomomitsu_Keruma" target="_blank" rel="noopener noreferrer">
-                      <img src="/Qiita_keruma_image.png" alt="広告" className="mx-auto max-w-full h-auto" />
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+              ))
+            )}
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-);
+    </>
+  );
+
 }
 
 export default Home;
