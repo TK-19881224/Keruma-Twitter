@@ -4,7 +4,7 @@ import { auth } from './FireBase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { db } from './FireBase';
-import { collection, getDocs, doc, getDoc, addDoc, deleteDoc, updateDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { setDoc, collection, getDocs, doc, getDoc, addDoc, deleteDoc, updateDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import './index.css';
 import Header from './Header';
 import { recordPageView } from './recordPageView';
@@ -52,19 +52,19 @@ function Home({ user, setUser }) {
 
   useEffect(() => {
     const fetchPosts = async () => {
+      if (!user) return; // userがnullの場合を防ぐ
+
       try {
+        const blockSnapshot = await getDocs(collection(db, `users/${user.uid}/blocks`));
+        const blockedUserIds = blockSnapshot.docs.map(doc => doc.id);
+
         const postsCollection = collection(db, 'posts');
         const q = query(postsCollection, orderBy("time", "desc"));
         const snapshot = await getDocs(q);
 
-        // ✅ デバッグ: 取得件数確認
-        setDebugInfo(`Firestore投稿件数: ${snapshot.size} 件`);
-
         const postsData = await Promise.all(snapshot.docs.map(async (docSnap) => {
           const postData = docSnap.data();
-
-          // Firestore TimestampからDateへ変換する安全な書き方
-          const time = postData.time && postData.time.toDate ? postData.time.toDate() : null;
+          if (blockedUserIds.includes(postData.uid)) return null;
 
           const userDoc = await getDoc(doc(db, 'users', postData.uid));
           const commentsSnapshot = await getDocs(collection(db, "posts", docSnap.id, "comments"));
@@ -79,6 +79,8 @@ function Home({ user, setUser }) {
             profilePhotoURL = userData.photoURL || profilePhotoURL;
           }
 
+          const time = postData.time?.toDate ? postData.time.toDate() : null;
+
           return {
             id: docSnap.id,
             uid: postData.uid,
@@ -88,17 +90,15 @@ function Home({ user, setUser }) {
             videoUrl: postData.videoUrl || '',
             displayName: nameFromUserCollection || '匿名',
             photoURL: profilePhotoURL || '/default-icon.png',
-            commentCount: commentCount ?? 0,
+            commentCount,
             draftComment: '',
-            time, // ← 変換済みのDateオブジェクト
+            time
           };
         }));
 
-        setPosts(postsData);
-
-        // ✅ デバッグ: postsDataを文字列で表示
-        setDebugInfo(prev => prev + `\n読み込み成功: ${postsData.length} 件の投稿を取得`);
-        setLoading(false); // ✅ 追加！
+        setPosts(postsData.filter(Boolean));
+        setDebugInfo(`✅ 読み込み成功: ${postsData.filter(Boolean).length} 件の投稿を取得`);
+        setLoading(false);
       } catch (err) {
         setDebugInfo(`❌ 投稿取得エラー: ${err.message}`);
         console.error("Error getting posts:", err);
@@ -106,7 +106,8 @@ function Home({ user, setUser }) {
     };
 
     fetchPosts();
-  }, [setPosts]);
+  }, [setPosts, user]);
+
 
   const handleLike = async (index) => {
     const updated = [...posts];
@@ -146,6 +147,18 @@ function Home({ user, setUser }) {
       setPosts(posts.filter((_, i) => i !== index));
     } catch (err) {
       console.error("削除失敗:", err);
+    }
+  };
+
+  const blockUser = async (currentUserId, targetUserId) => {
+    try {
+      await setDoc(doc(db, `users/${currentUserId}/blocks/${targetUserId}`), {
+        blockedUserId: targetUserId,
+        createdAt: serverTimestamp(),
+      });
+      alert('ユーザーをブロックしました');
+    } catch (err) {
+      console.error("ブロック失敗:", err);
     }
   };
 
@@ -279,6 +292,36 @@ function Home({ user, setUser }) {
                         url={`${baseUrl}/post/${post.id}`}
                         title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
                       />
+                      <button
+                        onClick={async (event) => {
+                          event.stopPropagation();
+                          const reason = prompt("通報理由を入力してください（例: 不適切な内容）");
+                          if (!reason) return;
+
+                          await addDoc(collection(db, "reports"), {
+                            reporterId: user.uid,
+                            reportedUserId: post.uid,
+                            postId: post.id,
+                            reason,
+                            createdAt: serverTimestamp()
+                          });
+                          alert("通報が送信されました。ご協力ありがとうございます。");
+                        }}
+                        className="text-red-500 hover:underline ml-4"
+                      >
+                        🚩 通報
+                      </button>
+                      <button
+                        onClick={async (event) => {
+                          event.stopPropagation();
+                          if (window.confirm("このユーザーをブロックしますか？")) {
+                            await blockUser(user.uid, post.uid);
+                          }
+                        }}
+                        className="text-gray-500 hover:underline ml-4"
+                      >
+                        🚫 ブロック
+                      </button>
                     </div>
 
                     {(index + 1) % 3 === 0 && (

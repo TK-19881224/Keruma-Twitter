@@ -9,9 +9,15 @@ import {
 } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
+import BlockedUsersList from './BlockedUsersList';
+import  useAuth  from './useAuth';
+
+
 
 function EditProfile() {
-  const userId = localStorage.getItem('currentUserId');
+  const currentUser = useAuth(); // ✅ 正しい位置
+  const userId = currentUser?.uid;
+  
   const [name, setName] = useState('');
   const [mail, setMail] = useState('');
   const [bio, setBio] = useState('');
@@ -104,6 +110,9 @@ function EditProfile() {
     return <p className="text-red-500 px-4 mt-8">ユーザーがログインしていません。</p>;
   }
 
+
+
+
   return (
     <>
       <div className="bg-white min-h-screen">
@@ -144,6 +153,9 @@ function EditProfile() {
                 onChange={handleImageChange}
                 className="text-sm"
               />
+            </div>
+            <div className="p-4">
+              <BlockedUsersList />
             </div>
             <button
               type="submit"

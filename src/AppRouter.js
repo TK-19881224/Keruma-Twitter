@@ -14,6 +14,7 @@ import Privacy from './Privacy';
 import Layout from './Layout'; // ✅ Layout をインポート
 import PostDetail from './PostDetail';
 import About from './About';
+import BlockedUsersList from './BlockedUsersList';
 
 function AppRouter() {
   const [user, setUser] = useState(null);
@@ -53,6 +54,7 @@ function AppRouter() {
             <Route path="privacy" element={<Privacy />} />
             <Route path="about" element={<About />} />
             <Route path="post/:postId" element={<PostDetail />} />
+            <Route path="/settings/blocks" element={<BlockedUsersList />} />
           </Route>
         </Routes>
       </PostProvider>
