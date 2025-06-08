@@ -7,6 +7,7 @@ import FollowButton from './FollowButton';
 import ShareButtons from './ShareButtons';
 import GiftButton from './GiftButton';
 import GiftList from './GiftList';
+import PostCard from './PostCard'; // ← 追加
 
 function Profile({ currentUserId }) {
   const { uid } = useParams();
@@ -59,7 +60,7 @@ function Profile({ currentUserId }) {
           if (!b.time) return -1;
           return b.time - a.time;
         });
-        
+
         setUserPosts(postsData);
       } catch (error) {
         console.error("投稿取得エラー:", error);
@@ -108,55 +109,15 @@ function Profile({ currentUserId }) {
 
           <div>
             <h3 className="text-lg font-semibold border-b pb-1 mb-2">投稿一覧</h3>
+
             {userPosts.length === 0 ? (
               <p className="text-sm text-gray-600">このユーザーの投稿はここに表示されます。</p>
             ) : (
-              userPosts.map((post, index) => (
-                <div key={index} className="mb-4 bg-white p-3 rounded shadow-sm text-sm">
-                  <div
-                    className="cursor-pointer hover:bg-gray-100 p-2 rounded transition"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  >
-                    <div className="text-gray-500 text-xs">
-                      {post.time
-                        ? post.time.toLocaleString('ja-JP', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                        : '日時不明'}
-                    </div>
-                    <p className="mt-1">{post.text}</p>
-
-                    {post.imageUrl && (
-                      <img
-                        src={post.imageUrl}
-                        alt="投稿画像"
-                        className="w-full max-w-xs sm:max-w-md mt-2 rounded object-contain"
-                        style={{ maxHeight: '200px' }}
-                      />
-                    )}
-
-                    {post.videoUrl && (
-                      <video
-                        controls
-                        className="w-full max-w-xs sm:max-w-md mt-2 rounded"
-                        style={{ maxHeight: '200px' }}
-                      >
-                        <source src={post.videoUrl} type="video/mp4" />
-                      </video>
-                    )}
-
-                    <ShareButtons
-                      url={`${baseUrl}/post/${post.id}`}
-                      title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
-                    />
-                  </div>
-                </div>
+              userPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
               ))
             )}
+
           </div>
 
           <GiftButton toUser={uid} />

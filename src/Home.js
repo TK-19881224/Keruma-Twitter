@@ -10,7 +10,7 @@ import Header from './Header';
 import { recordPageView } from './recordPageView';
 import ShareButtons from "./ShareButtons";
 import { Helmet } from 'react-helmet';
-
+import PostCard from './PostCard'; // ← 追加
 
 
 function Home({ user, setUser }) {
@@ -230,111 +230,29 @@ function Home({ user, setUser }) {
               <p>投稿がありません</p>
             ) : (
               posts.map((post, index) => (
-                <div key={post.id} className="p-4 border-b border-gray-300 hover:bg-gray-100 transition duration-200 rounded-md">
-                  <div className="flex items-center mb-2">
-                    <div
-                      className="flex items-center cursor-pointer text-blue-500"
-                      onClick={() => post.uid && navigate(`/profile/${post.uid}`)}
-                    >
-                      <img
-                        src={post.photoURL || "/default-icon.png"}
-                        alt="アイコン"
-                        className='w-8 h-8 rounded-full inline-block mr-2'
-                      />
-                      <p className="font-semibold text-sm">{post.displayName}</p>
-                    </div>
-                  </div>
-
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  >
-                    <p className="mb-2">{post.text}</p>
-                    {post.imageUrl && (
-                      <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
-                    )}
-                    {post.videoUrl && (
-                      <video controls className="rounded-md max-w-full mb-2">
-                        <source src={post.videoUrl} type="video/mp4" />
-                        お使いのブラウザは video タグをサポートしていません。
-                      </video>
-                    )}
-                    <p className="text-xs text-gray-500 mb-2">
-                      {post.time ? post.time.toLocaleString() : '日時不明'}
-                    </p>
-                    <div className="flex space-x-4 mt-2">
-                      <button
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleLike(index);
-                        }}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
-                      >
-                        ❤️ {post.likes}
-                      </button>
-                      <button
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleDelete(index);
-                        }}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
-                      >
-                        🗑️
-                      </button>
-
-                      <div style={{ marginTop: '1rem' }}>
-                        <p className="text-sm text-gray-600">
-                          コメント数: {post.commentCount || 0}
-                        </p>
-                      </div>
-
-                      <ShareButtons
-                        url={`${baseUrl}/post/${post.id}`}
-                        title={`Keruma SNSで面白い投稿を見つけました！「${post.text.slice(0, 30)}...」`}
-                      />
-                      <button
-                        onClick={async (event) => {
-                          event.stopPropagation();
-                          const reason = prompt("通報理由を入力してください（例: 不適切な内容）");
-                          if (!reason) return;
-
-                          await addDoc(collection(db, "reports"), {
-                            reporterId: user.uid,
-                            reportedUserId: post.uid,
-                            postId: post.id,
-                            reason,
-                            createdAt: serverTimestamp()
-                          });
-                          alert("通報が送信されました。ご協力ありがとうございます。");
-                        }}
-                        className="text-red-500 hover:underline ml-4"
-                      >
-                        🚩 通報
-                      </button>
-                      <button
-                        onClick={async (event) => {
-                          event.stopPropagation();
-                          if (window.confirm("このユーザーをブロックしますか？")) {
-                            await blockUser(user.uid, post.uid);
-                          }
-                        }}
-                        className="text-gray-500 hover:underline ml-4"
-                      >
-                        🚫 ブロック
-                      </button>
-                    </div>
-
-                    {(index + 1) % 3 === 0 && (
-                      <div className="p-4 my-4 bg-gray-100 border text-center">
-                        <p className="font-bold">スポンサーリンク</p>
-                        <a href="https://qiita.com/Tomomitsu_Keruma" target="_blank" rel="noopener noreferrer">
-                          <img src="/Qiita_keruma_image.png" alt="広告" className="mx-auto max-w-full h-auto" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  index={index}
+                  user={user}
+                  profileName={profileName}
+                  onLike={handleLike}
+                  onDelete={handleDelete}
+                  onBlock={blockUser}
+                  onReport={async (reason) => {
+                    await addDoc(collection(db, "reports"), {
+                      reporterId: user.uid,
+                      reportedUserId: post.uid,
+                      postId: post.id,
+                      reason,
+                      createdAt: serverTimestamp()
+                    });
+                    alert("通報が送信されました。ご協力ありがとうございます。");
+                  }}
+                  onAddComment={handleAddComment}
+                  navigate={navigate}
+                  baseUrl={baseUrl}
+                />
               ))
             )}
           </div>

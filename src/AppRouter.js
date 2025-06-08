@@ -15,6 +15,7 @@ import Layout from './Layout'; // ✅ Layout をインポート
 import PostDetail from './PostDetail';
 import About from './About';
 import BlockedUsersList from './BlockedUsersList';
+import LikeRanking from './LikeRanking';
 
 function AppRouter() {
   const [user, setUser] = useState(null);
@@ -49,6 +50,7 @@ function AppRouter() {
               element={<Profile currentUserId={user?.uid} />}
             />
             <Route path="edit-profile" element={<EditProfile />} />
+            <Route path="likeranking" element={<LikeRanking />} />
             <Route path="news" element={<NewsPage />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />

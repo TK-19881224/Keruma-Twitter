@@ -202,6 +202,12 @@ function Header() {
               📢 投稿一覧
             </button>
             <button
+              onClick={() => navigate('/likeranking')}
+              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+            >
+              👑 いいねランキング
+            </button>
+            <button
               onClick={() => navigate('/news')}
               className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
             >
