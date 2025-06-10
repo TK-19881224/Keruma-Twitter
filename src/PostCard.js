@@ -1,6 +1,6 @@
-// PostCard.js
 import React from 'react';
 import ShareButtons from './ShareButtons';
+import { TranslateButton } from './TranslateButton';
 
 const PostCard = ({
   post,
@@ -14,21 +14,35 @@ const PostCard = ({
   navigate,
   baseUrl
 }) => {
+  if (!post) return null; // 安全策
+
+  const isOwnPost = user && post.uid === user.uid;
+
   return (
-    <div key={post.id} className="p-4 border-b border-gray-300 hover:bg-gray-100 transition duration-200 rounded-md">
+    <div className="p-4 border-b border-gray-300 hover:bg-gray-100 transition duration-200 rounded-md">
       <div className="flex items-center mb-2">
         <div
           className="flex items-center cursor-pointer text-blue-500"
           onClick={() => post.uid && navigate(`/profile/${post.uid}`)}
         >
-          <img src={post.photoURL || "/default-icon.png"} alt="アイコン" className="w-8 h-8 rounded-full mr-2" />
+          <img
+            src={post.photoURL || "/default-icon.png"}
+            alt="アイコン"
+            className="w-8 h-8 rounded-full mr-2"
+          />
           <p className="font-semibold text-sm">{post.displayName}</p>
         </div>
       </div>
 
       <div className="cursor-pointer" onClick={() => navigate(`/post/${post.id}`)}>
         <p className="mb-2">{post.text}</p>
-        {post.imageUrl && <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />}
+
+        {/* 翻訳ボタン */}
+        <TranslateButton text={post.text} targetLang="ja" />
+
+        {post.imageUrl && (
+          <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
+        )}
         {post.videoUrl && (
           <video controls className="rounded-md max-w-full mb-2">
             <source src={post.videoUrl} type="video/mp4" />
@@ -39,7 +53,7 @@ const PostCard = ({
           {post.time ? post.time.toLocaleString() : '日時不明'}
         </p>
 
-        <div className="flex space-x-4 mt-2">
+        <div className="flex flex-wrap items-center space-x-4 mt-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -50,15 +64,17 @@ const PostCard = ({
             ❤️ {post.likes}
           </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(index);
-            }}
-            className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
-          >
-            🗑️
-          </button>
+          {isOwnPost && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(index);
+              }}
+              className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+            >
+              🗑️
+            </button>
+          )}
 
           <p className="text-sm text-gray-600 mt-2">コメント数: {post.commentCount || 0}</p>
 
@@ -71,24 +87,26 @@ const PostCard = ({
             onClick={(e) => {
               e.stopPropagation();
               const reason = prompt("通報理由を入力してください（例: 不適切な内容）");
-              if (reason) onReport(reason);
+              if (reason) onReport(reason, post.id); // post.idも渡す
             }}
             className="text-red-500 hover:underline ml-4"
           >
             🚩 通報
           </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm("このユーザーをブロックしますか？")) {
-                onBlock(user.uid, post.uid);
-              }
-            }}
-            className="text-gray-500 hover:underline ml-4"
-          >
-            🚫 ブロック
-          </button>
+          {!isOwnPost && user && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm("このユーザーをブロックしますか？")) {
+                  onBlock(user.uid, post.uid);
+                }
+              }}
+              className="text-gray-500 hover:underline ml-4"
+            >
+              🚫 ブロック
+            </button>
+          )}
         </div>
 
         {(index + 1) % 3 === 0 && (

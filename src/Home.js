@@ -236,7 +236,7 @@ function Home({ user, setUser }) {
                   index={index}
                   user={user}
                   profileName={profileName}
-                  onLike={handleLike}
+                  onLike={(i) => handleLike(i)}
                   onDelete={handleDelete}
                   onBlock={blockUser}
                   onReport={async (reason) => {
