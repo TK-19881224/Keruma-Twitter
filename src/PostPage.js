@@ -6,6 +6,7 @@ import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import { serverTimestamp } from "firebase/firestore";
+import { updateEnglishPostBadge, isEnglish } from './badgeUtils';
 
 function PostPage({ profilePhotoURL, profileName, user, setUser }) {
   const [text, setText] = useState('');
@@ -82,6 +83,12 @@ function PostPage({ profilePhotoURL, profileName, user, setUser }) {
     try {
       const docRef = await addDoc(collection(db, 'posts'), newPost);
       console.log('投稿がFirestoreに保存されました。ID:', docRef.id);
+
+      // 英語判定してバッジ更新を呼ぶ
+      if (isEnglish(text)) {
+        await updateEnglishPostBadge(user.uid);
+      }
+
       alert("投稿しました！");
       setText('');
       setImage(null);

@@ -211,7 +211,7 @@ function Header() {
               onClick={() => navigate('/news')}
               className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
             >
-              📰 ニュース
+              📰 英語ニュース
             </button>
             {user ? (
               <button

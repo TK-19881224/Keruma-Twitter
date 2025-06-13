@@ -12,7 +12,7 @@ function NewsPage() {
   useEffect(() => {
     const fetchNews = async () => {
       const API_KEY = process.env.REACT_APP_GNEWS_API_KEY;
-      const endpoint = `https://gnews.io/api/v4/top-headlines?lang=ja&country=jp&max=20&token=${API_KEY}`;
+      const endpoint = `https://gnews.io/api/v4/top-headlines?lang=en&country=us&max=20&token=${API_KEY}`;
       console.log("APIキー:", API_KEY);
       console.log("エンドポイント:", endpoint);
 
@@ -49,7 +49,7 @@ function NewsPage() {
   return (
     <div className="max-w-4xl mx-auto pt-24 p-4">
       <Header profileName={profile.name} profilePhotoURL={profile.photoURL} />
-      <h1 className="text-2xl font-bold mb-4">最新ニュース（日本）</h1>
+      <h1 className="text-2xl font-bold mb-4">最新ニュース</h1>
       {loading ? (
         <p>読み込み中...</p>
       ) : articles.length === 0 ? (

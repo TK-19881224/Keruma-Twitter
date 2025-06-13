@@ -100,6 +100,14 @@ function Profile({ currentUserId }) {
             <div>
               <p className="font-semibold">{profile.name}</p>
               <p className="text-gray-500 text-sm">{profile.bio}</p>
+
+              {/* ✅ バッジ表示を追加 */}
+              {profile.englishPostCount !== undefined && profile.englishPostStreak !== undefined && (
+                <div className="text-sm text-gray-700 space-y-1 mt-2">
+                  <p>📝 英語投稿回数: {profile.englishPostCount}回</p>
+                  <p>🔥 連続英語投稿日数: {profile.englishPostStreak}日</p>
+                </div>
+              )}
             </div>
           </div>
 

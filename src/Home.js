@@ -10,7 +10,8 @@ import Header from './Header';
 import { recordPageView } from './recordPageView';
 import ShareButtons from "./ShareButtons";
 import { Helmet } from 'react-helmet';
-import PostCard from './PostCard'; // ← 追加
+import PostCard from './PostCard';
+import TodayToeicWord from './TodayToeicWord';
 
 
 function Home({ user, setUser }) {
@@ -221,7 +222,8 @@ function Home({ user, setUser }) {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
           />
-
+          <TodayToeicWord /> 
+          
           <div className="bg-white p-4 rounded-lg shadow-md mb-4 mt-6">
             <h2>投稿一覧</h2>
             {loading ? (

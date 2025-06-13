@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ShareButtons from './ShareButtons';
 import { TranslateButton } from './TranslateButton';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
 
 const PostCard = ({
   post,
@@ -14,9 +16,41 @@ const PostCard = ({
   navigate,
   baseUrl
 }) => {
-  if (!post) return null; // 安全策
+  const [correctionResult, setCorrectionResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  if (!post) {
+    return <div className="p-4 text-gray-500">投稿が見つかりません</div>;
+  }
 
   const isOwnPost = user && post.uid === user.uid;
+
+  const handleCorrection = async (text) => {
+    try {
+      setLoading(true);
+      setCorrectionResult(null);
+
+      const res = await fetch(`${API_BASE_URL}/correct`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("APIエラー:", errorText);
+        throw new Error("APIリクエストが失敗しました");
+      }
+
+      const data = await res.json();
+      setCorrectionResult(data.correction);
+    } catch (error) {
+      console.error("添削エラー:", error);
+      setCorrectionResult("添削に失敗しました。");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="p-4 border-b border-gray-300 hover:bg-gray-100 transition duration-200 rounded-md">
@@ -37,7 +71,6 @@ const PostCard = ({
       <div className="cursor-pointer" onClick={() => navigate(`/post/${post.id}`)}>
         <p className="mb-2">{post.text}</p>
 
-        {/* 翻訳ボタン */}
         <TranslateButton text={post.text} targetLang="ja" />
 
         {post.imageUrl && (
@@ -87,7 +120,7 @@ const PostCard = ({
             onClick={(e) => {
               e.stopPropagation();
               const reason = prompt("通報理由を入力してください（例: 不適切な内容）");
-              if (reason) onReport(reason, post.id); // post.idも渡す
+              if (reason) onReport(reason, post.id);
             }}
             className="text-red-500 hover:underline ml-4"
           >
