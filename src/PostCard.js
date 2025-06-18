@@ -8,16 +8,16 @@ const PostCard = ({
   post,
   index,
   user,
-  profileName,
   onLike,
   onDelete,
   onBlock,
   onReport,
   navigate,
-  baseUrl
+  baseUrl,
+  showProfileInfo = true,
+  from = "profile"  // 追加: 呼び出し元を指定、デフォルトは "profile"
 }) => {
-  const [correctionResult, setCorrectionResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+
 
   if (!post) {
     return <div className="p-4 text-gray-500">投稿が見つかりません</div>;
@@ -25,63 +25,75 @@ const PostCard = ({
 
   const isOwnPost = user && post.uid === user.uid;
 
-  const handleCorrection = async (text) => {
-    try {
-      setLoading(true);
-      setCorrectionResult(null);
 
-      const res = await fetch(`${API_BASE_URL}/correct`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("APIエラー:", errorText);
-        throw new Error("APIリクエストが失敗しました");
-      }
-
-      const data = await res.json();
-      setCorrectionResult(data.correction);
-    } catch (error) {
-      console.error("添削エラー:", error);
-      setCorrectionResult("添削に失敗しました。");
-    } finally {
-      setLoading(false);
+  // 投稿詳細へ遷移
+  const goToPostDetail = (e) => {
+    e.stopPropagation();
+    if (post.id) {
+      navigate(`/post/${post.id}`);
+    } else {
+      console.warn("post.id がありません");
     }
   };
 
+  // プロフィールへ遷移
+  const goToProfile = (e) => {
+    e.stopPropagation();
+    if (post.uid) {
+      navigate(`/profile/${post.uid}`);
+    } else {
+      console.warn("post.uid がありません");
+    }
+  };
+
+  const userImageUrl = from === "home" ? (post.photoURL || "/default-icon.png") : (post.user?.icon || "/default-icon.png");
+
   return (
     <div className="p-4 border-b border-gray-300 hover:bg-gray-100 transition duration-200 rounded-md">
-      <div className="flex items-center mb-2">
-        <div
-          className="flex items-center cursor-pointer text-blue-500"
-          onClick={() => post.uid && navigate(`/profile/${post.uid}`)}
-        >
+      <div
+        className="flex items-center cursor-pointer text-orange-500 mb-2"
+        onClick={goToProfile}
+        role="button"
+        tabIndex={0}
+        onKeyPress={(e) => e.key === 'Enter' && goToProfile(e)}
+      >
+        <div className="w-12 h-12 rounded-full overflow-hidden border mr-2">
           <img
-            src={post.photoURL || "/default-icon.png"}
-            alt="アイコン"
-            className="w-8 h-8 rounded-full mr-2"
+            src={userImageUrl || "/default-icon.png"}
+            alt="ユーザーアイコン"
+            className="w-full h-full object-cover"
           />
-          <p className="font-semibold text-sm">{post.displayName}</p>
         </div>
+        <p className="font-semibold text-sm">{post.displayName}</p>
       </div>
 
-      <div className="cursor-pointer" onClick={() => navigate(`/post/${post.id}`)}>
+      <div className="cursor-pointer" onClick={goToPostDetail} role="button" tabIndex={0} onKeyPress={(e) => e.key === 'Enter' && goToPostDetail(e)}>
         <p className="mb-2">{post.text}</p>
 
         <TranslateButton text={post.text} targetLang="ja" />
 
         {post.imageUrl && (
-          <img src={post.imageUrl} alt="投稿画像" className="rounded-md max-w-full mb-2" />
+          <img
+            src={post.imageUrl}
+            alt="投稿画像"
+            className="rounded-md max-w-full mb-2"
+            onClick={(e) => {
+              e.stopPropagation();  // 画像クリックだけで遷移できるように
+              goToPostDetail(e);
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => e.key === 'Enter' && goToPostDetail(e)}
+          />
         )}
+
         {post.videoUrl && (
           <video controls className="rounded-md max-w-full mb-2">
             <source src={post.videoUrl} type="video/mp4" />
             お使いのブラウザは video タグをサポートしていません。
           </video>
         )}
+
         <p className="text-xs text-gray-500 mb-2">
           {post.time ? post.time.toLocaleString() : '日時不明'}
         </p>
@@ -92,7 +104,7 @@ const PostCard = ({
               e.stopPropagation();
               onLike(index);
             }}
-            className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+            className="bg-orange-500 text-white px-4 py-2 rounded-2xl hover:bg-orange-600 transition duration-200 shadow-md"
           >
             ❤️ {post.likes}
           </button>
@@ -103,7 +115,7 @@ const PostCard = ({
                 e.stopPropagation();
                 onDelete(index);
               }}
-              className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+              className="bg-orange-500 text-white px-4 py-2 rounded-2xl hover:bg-orange-600 transition duration-200 shadow-md"
             >
               🗑️
             </button>
@@ -122,7 +134,7 @@ const PostCard = ({
               const reason = prompt("通報理由を入力してください（例: 不適切な内容）");
               if (reason) onReport(reason, post.id);
             }}
-            className="text-red-500 hover:underline ml-4"
+            className="text-orange-500 hover:underline ml-4"
           >
             🚩 通報
           </button>

@@ -43,7 +43,7 @@ function GiftButton({ toUser }) {
             min="50"
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
 
@@ -57,7 +57,7 @@ function GiftButton({ toUser }) {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="感謝の気持ちなど..."
-            className="w-full px-3 py-2 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
             rows={1}
           />
         </div>

@@ -58,7 +58,7 @@ function NewsPage() {
         <ul className="space-y-4">
           {articles.map((article, idx) => (
             <li key={idx} className="bg-white p-4 rounded shadow">
-              <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold text-blue-600 hover:underline">
+              <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold text-orange-600 hover:underline">
                 {article.title}
               </a>
               {article.image && (

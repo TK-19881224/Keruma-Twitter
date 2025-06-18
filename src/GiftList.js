@@ -39,13 +39,6 @@ function GiftList({ toUser }) {
 
         const giftsWithNames = await Promise.all(giftPromises);
 
-        // ★ ここで並び替え（新しい順）
-        const sortedGifts = giftsWithNames.sort((a, b) => {
-          if (!a.createdAt || !b.createdAt) return 0;
-          return b.createdAt - a.createdAt;
-        });
-
-
         setGifts(giftsWithNames);
       } catch (err) {
         console.error('ギフト取得エラー:', err);
@@ -63,7 +56,7 @@ function GiftList({ toUser }) {
       <h3 className="text-lg font-semibold border-b pb-2 mb-4">受け取ったギフト</h3>
 
       {loading && <p className="text-sm text-gray-500">読み込み中...</p>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-orange-500">{error}</p>}
 
       {!loading && gifts.length === 0 && !error && (
         <p className="text-sm text-gray-600">まだギフトはありません。</p>

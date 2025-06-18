@@ -104,7 +104,7 @@ export default function LikeRanking() {
       </Helmet>
 
       <div className="bg-white min-h-screen">
-        <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-20">
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-orange-200 via-orange-100 to-white p-8 font-sans pt-20">
           <Header
             profilePhotoURL={profilePhotoURL}
             profileName={profileName}
@@ -122,7 +122,7 @@ export default function LikeRanking() {
               {periods.map(p => (
                 <button
                   key={p}
-                  className={`px-3 py-1 rounded ${selectedPeriod === p ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                  className={`px-3 py-1 rounded ${selectedPeriod === p ? 'bg-orange-600 text-white' : 'bg-gray-200'}`}
                   onClick={() => setSelectedPeriod(p)}
                 >
                   {p === 'daily' && '1日'}

@@ -27,13 +27,6 @@ function PostPage({ profilePhotoURL, profileName, user, setUser }) {
     if (text.trim() === '') return;
 
     const now = new Date();
-    const formattedTime = now.toLocaleString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
 
     let imageUrl = null;
     let videoUrl = null;
@@ -102,7 +95,7 @@ function PostPage({ profilePhotoURL, profileName, user, setUser }) {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-10">
+      <div className="max-w-4xl mx-auto bg-gradient-to-br from-orange-200 via-orange-100 to-white p-8 font-sans pt-10">
         <Header
           profilePhotoURL={profilePhotoURL}
           profileName={profileName}
@@ -142,7 +135,7 @@ function PostPage({ profilePhotoURL, profileName, user, setUser }) {
 
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+                  className="bg-orange-500 text-white px-4 py-2 rounded-2xl hover:bg-orange-600 transition duration-200 shadow-md"
                 >
                   投稿する
                 </button>

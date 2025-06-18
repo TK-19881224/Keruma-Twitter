@@ -8,7 +8,6 @@ import { setDoc, collection, getDocs, doc, getDoc, addDoc, deleteDoc, updateDoc,
 import './index.css';
 import Header from './Header';
 import { recordPageView } from './recordPageView';
-import ShareButtons from "./ShareButtons";
 import { Helmet } from 'react-helmet';
 import PostCard from './PostCard';
 import TodayToeicWord from './TodayToeicWord';
@@ -23,8 +22,8 @@ function Home({ user, setUser }) {
   const [showPostForm, setShowPostForm] = useState(false);
   const [loading, setLoading] = useState(true); // 🔍 ローディング管理追加
   const baseUrl = window.location.origin;
-
-  const title = "Keruma SNSで面白い投稿を見つけました！";
+  // 追加してください
+const [debugInfo, setDebugInfo] = useState('');
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -47,9 +46,6 @@ function Home({ user, setUser }) {
     });
     return () => unsub();
   }, []);
-
-  // 👇 追加: デバッグ表示用
-  const [debugInfo, setDebugInfo] = useState('デバッグ情報未取得');
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -78,6 +74,7 @@ function Home({ user, setUser }) {
             const userData = userDoc.data();
             nameFromUserCollection = userData.name || nameFromUserCollection;
             profilePhotoURL = userData.photoURL || profilePhotoURL;
+            console.log(`post id: ${docSnap.id}, userDoc.exists: ${userDoc.exists()}, userData:`, userDoc.data());
           }
 
           const time = postData.time?.toDate ? postData.time.toDate() : null;
@@ -193,7 +190,7 @@ function Home({ user, setUser }) {
     <>
       <Helmet>
         {/* SEO */}
-        <title>つぶやき</title>
+        <title>英語でつぶやこう!</title>
         <meta name="description" content="写真・動画・つぶやきを気軽に共有できるSNSです。" />
         <link rel="canonical" href="https://keruma-twitter.vercel.app/" />
 
@@ -212,7 +209,7 @@ function Home({ user, setUser }) {
         <meta name="twitter:image" content="https://keruma-twitter.vercel.app/og-image.png" />
       </Helmet>
       <div className="bg-white min-h-screen">
-        <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-200 via-blue-100 to-white p-8 font-sans pt-20">
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-orange-200 via-orange-100 to-white p-8 font-sans pt-20">
           <Header
             profilePhotoURL={profilePhotoURL}
             profileName={profileName}
@@ -234,7 +231,7 @@ function Home({ user, setUser }) {
               posts.map((post, index) => (
                 <PostCard
                   key={post.id}
-                  post={post}
+                  post={post}  from="home" 
                   index={index}
                   user={user}
                   profileName={profileName}
@@ -254,6 +251,7 @@ function Home({ user, setUser }) {
                   onAddComment={handleAddComment}
                   navigate={navigate}
                   baseUrl={baseUrl}
+                  showProfileInfo={true} // ここを追加！
                 />
               ))
             )}

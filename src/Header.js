@@ -18,7 +18,8 @@ function Header() {
   const [viewCount, setViewCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
-
+  // 追加してください
+const [qualifications, setQualifications] = useState([]);
 
   const toggleMenu = () => setMenuOpen(prev => !prev);
 
@@ -32,21 +33,7 @@ function Header() {
       });
   };
 
-  const sendLikeNotification = async ({ toUserId, fromUserId, postId }) => {
-    try {
-      await addDoc(collection(db, "notifications"), {
-        toUserId,       // いいねを受けるユーザーID
-        fromUserId,     // いいねしたユーザーID
-        postId,         // 関連投稿ID
-        type: "like",   // 通知タイプ
-        message: "あなたの投稿にいいねが付きました！",
-        read: false,
-        createdAt: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error("通知の追加に失敗しました", error);
-    }
-  };
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -58,9 +45,12 @@ function Header() {
             const data = docSnap.data();
             setProfileName(data.name || user.displayName || 'ゲスト');
             setProfilePhotoURL(data.photoURL || user.photoURL || "/default-icon.png");
-          } else {
-            setProfileName(user.displayName || 'ゲスト');
-            setProfilePhotoURL(user.photoURL || "/default-icon.png");
+
+            // ここで資格情報も保存
+            setQualifications({
+              eiken: data.eiken || [],
+              toeic: data.toeic || null
+            });
           }
         } catch (error) {
           console.error("プロフィール情報の取得に失敗しました", error);
@@ -112,14 +102,20 @@ function Header() {
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate(`/profile/${currentUserId}`)}>
             {user ? (
               <>
-                <img src={profilePhotoURL} alt="アイコン" className="w-8 h-8 rounded-full border" />
-                <span className="text-blue-600 text-sm font-medium hover:underline" >
+                <div className="w-12 h-12 rounded-full overflow-hidden border mr-2">
+                  <img
+                    src={profilePhotoURL}
+                    alt="アイコン"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="text-orange-600 text-sm font-medium hover:underline">
                   {profileName}
                 </span>
               </>
             ) : (
               <>
-                <img src="/default-icon.png" alt="ゲストアイコン" className="w-8 h-8 rounded-full border" />
+                <img src="/default-icon.png" alt="ゲストアイコン" className="w-full h-full object-cover" />
                 <span className="text-gray-600 text-sm font-medium">
                   ゲスト
                 </span>
@@ -131,7 +127,7 @@ function Header() {
             <button onClick={() => setNotifOpen(prev => !prev)} className="text-gray-600">
               <Bell size={24} />
               {notifications.some(n => !n.read) && (
-                <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-2 h-2"></span>
+                <span className="absolute -top-1 -right-1 bg-orange-500 rounded-full w-2 h-2"></span>
               )}
             </button>
 
@@ -182,13 +178,13 @@ function Header() {
                 toggleMenu();
                 navigate('/post');
               }}
-              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+              className="bg-orange-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-orange-600 transition shadow"
             >
               ✏️ 投稿
             </button>
             <button
               onClick={() => navigate(`/profile/${currentUserId}`)}
-              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+              className="bg-orange-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-orange-600 transition shadow"
             >
               👤 プロフィール
             </button>
@@ -197,19 +193,19 @@ function Header() {
                 toggleMenu();
                 navigate('/');
               }}
-              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+              className="bg-orange-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-orange-600 transition shadow"
             >
               📢 投稿一覧
             </button>
             <button
               onClick={() => navigate('/likeranking')}
-              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+              className="bg-orange-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-orange-600 transition shadow"
             >
               👑 いいねランキング
             </button>
             <button
               onClick={() => navigate('/news')}
-              className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+              className="bg-orange-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-orange-600 transition shadow"
             >
               📰 英語ニュース
             </button>
@@ -219,7 +215,7 @@ function Header() {
                   toggleMenu();
                   handleLogout();
                 }}
-                className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+                className="bg-orange-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-orange-600 transition shadow"
               >
                 ログアウト
               </button>
@@ -229,7 +225,7 @@ function Header() {
                   toggleMenu();
                   navigate('/login');
                 }}
-                className="bg-blue-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 transition shadow"
+                className="bg-orange-500 text-white text-sm px-4 py-2 rounded-xl hover:bg-orange-600 transition shadow"
               >
                 ログイン
               </button>

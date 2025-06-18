@@ -29,7 +29,7 @@ function PostDetail() {
 
         // 🔽 ここで `time` を安全に変換
         const time = postData.time && postData.time.toDate ? postData.time.toDate().toLocaleString() : "日時不明";
-        
+
         setPost({
           ...postData,
           time, // ← 文字列としてセット
@@ -80,11 +80,13 @@ function PostDetail() {
   return (
     <div className="max-w-2xl mx-auto p-6 mt-10 bg-white shadow rounded">
       <div className="flex items-center mb-4">
-        <img
-          src={author?.photoURL || '/default-icon.png'}
-          alt="ユーザーアイコン"
-          className="w-10 h-10 rounded-full mr-2"
-        />
+        <div className="w-12 h-12 rounded-full overflow-hidden border mr-2">
+          <img
+            src={author?.photoURL || '/default-icon.png'}
+            alt="ユーザーアイコン"
+            className="w-full h-full object-cover"
+          />
+        </div>
         <div>
           <p className="font-semibold">{author?.name || '匿名ユーザー'}</p>
           <p className="text-sm text-gray-500">{post.time}</p>
@@ -131,7 +133,7 @@ function PostDetail() {
             />
             <button
               onClick={handleAddComment}
-              className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition duration-200 shadow-md"
+              className="mt-2 bg-orange-500 text-white px-4 py-2 rounded-2xl hover:bg-orange-600 transition duration-200 shadow-md"
             >
               コメントする
             </button>

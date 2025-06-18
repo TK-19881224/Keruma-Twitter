@@ -73,7 +73,7 @@ export default function BlockedUsersList() {
               <span className="flex-1">{user.name}</span>
               <button
                 onClick={() => handleUnblock(user.uid)}
-                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                className="px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
               >
                 解除
               </button>
