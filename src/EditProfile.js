@@ -29,7 +29,7 @@ function EditProfile() {
   const [nativeLanguage, setNativeLanguage] = useState('');
   const [toeicScore, setToeicScore] = useState('');
   const [eikenGrade, setEikenGrade] = useState('');
-  const [experienceYears, setExperienceYears] = useState('');
+  const [experienceMonths, setexperienceMonths] = useState('');
   const [hasTeachingCert, setHasTeachingCert] = useState(false);
   const [englishPostCount, setEnglishPostCount] = useState('');
   const [englishPostStreak, setEnglishPostStreak] = useState('');
@@ -55,7 +55,7 @@ function EditProfile() {
           setNativeLanguage(data.nativeLanguage || '');
           setToeicScore(data.toeicScore || '');
           setEikenGrade(data.eikenGrade || '');
-          setExperienceYears(data.experienceYears || '');
+          setexperienceMonths(data.experienceMonths || '');
           setHasTeachingCert(data.hasTeachingCert || false);
           setEnglishPostCount(data.englishPostCount || '');
           setEnglishPostStreak(data.englishPostStreak || '');
@@ -125,7 +125,7 @@ function EditProfile() {
           nativeLanguage,
           toeicScore: toeicScore ? Number(toeicScore) : null,
           eikenGrade,
-          experienceYears: experienceYears ? Number(experienceYears) : null,
+          experienceMonths: experienceMonths ? Number(experienceMonths) : null,
           hasTeachingCert,
           englishPostCount: englishPostCount ? Number(englishPostCount) : null,
           englishPostStreak: englishPostStreak ? Number(englishPostStreak) : null
@@ -227,9 +227,9 @@ function EditProfile() {
 
             <input
               type="number"
-              placeholder="英語使用年数（例: 3）"
-              value={experienceYears}
-              onChange={(e) => setExperienceYears(e.target.value)}
+              placeholder="英語使用月数（例: 36）"
+              value={experienceMonths}
+              onChange={(e) => setexperienceMonths(e.target.value)}
               className="w-full border px-3 py-2 rounded"
             />
 

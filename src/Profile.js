@@ -13,22 +13,22 @@ function determineRole(user) {
   const {
     toeicScore,
     eikenGrade,
-    experienceYears,
+    experienceMonths,
     nativeLanguage,
     hasTeachingCert,
     postCount
   } = user;
 
-  if (hasTeachingCert) return "certified_teacher";
-  if (nativeLanguage === "English") return "native";
-  if (toeicScore >= 900 || eikenGrade === "1級" || experienceYears >= 5 || postCount >= 2000)
-    return "expert";
-  if (toeicScore >= 700 || eikenGrade === "準1級" || experienceYears >= 3 || postCount >= 500)
-    return "advanced";
-  if (toeicScore >= 400 || experienceYears >= 1 || postCount >= 100)
-    return "intermediate";
+  if (hasTeachingCert) return "🎓 certified_teacher";
+  if (nativeLanguage === "English") return "🗣️ native";
+  if (toeicScore >= 900 || eikenGrade === "1級" || experienceMonths >= 60 || postCount >= 2000)
+    return "🏆 expert";
+  if (toeicScore >= 700 || eikenGrade === "準1級" || experienceMonths >= 36 || postCount >= 500)
+    return "📘 advanced";
+  if (toeicScore >= 400 || experienceMonths >= 12 || postCount >= 100)
+    return "📗 intermediate";
 
-  return "beginner";
+  return "📕 beginner";
 }
 
 function Profile({ currentUserId }) {
@@ -39,6 +39,7 @@ function Profile({ currentUserId }) {
   const [userPosts, setUserPosts] = useState([]);
   const baseUrl = window.location.origin;
   const auth = getAuth();
+  const [showLevelInfo, setShowLevelInfo] = useState(false);
 
   const handleDelete = async (postId) => {
     try {
@@ -109,8 +110,34 @@ function Profile({ currentUserId }) {
 
   const isCurrentUser = currentUserId === uid;
 
+
   return (
     <div className="bg-white min-h-screen">
+      {
+        showLevelInfo && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl shadow-lg max-w-md w-full">
+              <h3 className="text-lg font-bold mb-4">🎯 英語レベルアップ条件</h3>
+              <ul className="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                <ul className="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                  <li><strong>🎓 certified_teacher</strong>: 英語教師資格あり</li>
+                  <li><strong>🗣️ native</strong>: 英語が母国語</li>
+                  <li><strong>🏆 expert</strong>: TOEIC900以上、英検1級、5年以上の経験、または投稿2000件以上</li>
+                  <li><strong>📘 advanced</strong>: TOEIC700以上、英検準1級、3年以上の経験、または投稿500件以上</li>
+                  <li><strong>📗 intermediate</strong>: TOEIC400以上、1年以上の経験、または投稿100件以上</li>
+                  <li><strong>📕 beginner</strong>: 上記以外</li>
+                </ul>
+              </ul>
+              <button
+                onClick={() => setShowLevelInfo(false)}
+                className="mt-4 bg-orange-600 text-white px-4 py-1 rounded hover:bg-orange-700"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        )
+      }
       <Header profileName={profile.name} profilePhotoURL={profile.photoURL} />
       <div className="max-w-4xl mx-auto bg-gradient-to-br from-orange-200 via-orange-100 to-white p-8 font-sans pt-20">
         <div className="bg-white rounded-2xl shadow-md p-6 space-y-6 font-sans mt-6">
@@ -139,18 +166,21 @@ function Profile({ currentUserId }) {
 
               {(profile.toeicScore !== undefined ||
                 profile.eikenGrade ||
-                profile.experienceYears !== undefined ||
+                profile.experienceMonths !== undefined ||
                 profile.nativeLanguage ||
                 profile.hasTeachingCert ||
                 profile.englishPostCount !== undefined ||
                 profile.englishPostStreak !== undefined) && (
                   <div className="text-sm text-gray-700 space-y-1 mt-2">
                     <h4 className="font-semibold text-gray-700 mb-1">🌍 英語スキル情報</h4>
-                    <p>🧠 英語レベル: <strong>{determineRole(profile)}</strong></p>
+                    <p className="cursor-pointer text-blue-600 hover:underline" onClick={() => setShowLevelInfo(true)}>
+                      🧠 英語レベル: <strong>{determineRole(profile)}</strong>
+                    </p>
+
                     {profile.nativeLanguage && <p>🗣️ 母国語: {profile.nativeLanguage}</p>}
                     {profile.toeicScore !== undefined && <p>📊 TOEICスコア: {profile.toeicScore}</p>}
                     {profile.eikenGrade && <p>📝 英検: {profile.eikenGrade}</p>}
-                    {profile.experienceYears !== undefined && <p>📆 使用経験: {profile.experienceYears}年</p>}
+                    {profile.experienceMonths !== undefined && <p>📆 使用経験: {profile.experienceMonths}ヶ月</p>}
                     {profile.hasTeachingCert && <p>🎓 英語教師資格: あり</p>}
                     {profile.englishPostCount !== undefined && <p>📝 英語投稿回数: {profile.englishPostCount}回</p>}
                     {profile.englishPostStreak !== undefined && <p>🔥 連続英語投稿日数: {profile.englishPostStreak}日</p>}
